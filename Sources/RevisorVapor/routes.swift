@@ -5,7 +5,8 @@ func routes(_ app: Application) throws {
         "It works!"
     }
 
-    app.get("hello") { req async -> String in
-        "Hello, world!"
-    }
+    //auth/google/callback
+    
+    let group = app.grouped("api")
+    try group.register(collection: GoogleAuthController())
 }
