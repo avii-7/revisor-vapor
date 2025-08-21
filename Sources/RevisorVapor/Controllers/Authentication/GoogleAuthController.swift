@@ -7,19 +7,12 @@
 
 import Vapor
 
-struct GoogleToken: Decodable {
-    let accessToken: String
-    let refreshToken: String
-    let expiresIn: Int
-    let tokenType: String
-    let scope: String
+extension GoogleAuthController {
     
-    enum CodingKeys: String, CodingKey {
-        case accessToken = "access_token"
-        case refreshToken = "refresh_token"
-        case expiresIn = "expires_in"
-        case tokenType = "token_type"
-        case scope
+    enum Endpoint: String {
+        case authUrl = "https://accounts.google.com/o/oauth2/v2/auth"
+        case token = "https://oauth2.googleapis.com/token"
+        case profile = "https://openidconnect.googleapis.com/v1/userinfo"
     }
 }
 
@@ -34,7 +27,7 @@ struct GoogleAuthController: RouteCollection {
     }
     
     private func getGoogleAuthUrl(_ req: Request) throws -> Response {
-        var baseUrl = URL(string: "https://accounts.google.com/o/oauth2/v2/auth")!
+        var baseUrl = URL(string: Endpoint.authUrl.rawValue)!
         let redirectURI = Environment.get("GOOGLE_REDIRECT_URI")!
         let clientId = Environment.get("GOOGLE_CLIENT_ID")!
         
@@ -42,9 +35,10 @@ struct GoogleAuthController: RouteCollection {
             "client_id": clientId,
             "redirect_uri": redirectURI,
             "response_type": "code",
-            "scope": "email openid profile",
+            "scope": "openid profile email",
             "access_type": "offline",
-            "state": authState
+            "state": authState,
+            "prompt": "consent"
         ]
         
         baseUrl.append(queryItems: params.toQueryItems())
@@ -76,50 +70,47 @@ struct GoogleAuthController: RouteCollection {
             return Response(status: .badRequest, body: "Missing code")
         }
         
-        let tokens = try await exchangeAuthorizationCodeForTokens(using: code, req.client)
+        let token = try await exchangeAuthorizationCodeForToken(using: code, req.client)
+        let googleUser = try await fetchUserInfo(using: token, req.client)
         
-        print(tokens)
-        
-        return Response(status: .ok)
+        // Store refresh token at db
+        let response = req.redirect(to: "/")
+        try response.content.encode("token")
+        return response
     }
     
-    private func exchangeAuthorizationCodeForTokens(using code: String, _ client: any Client) async throws -> GoogleToken {
-        let url = "https://oauth2.googleapis.com/token"
+    private func exchangeAuthorizationCodeForToken(using code: String, _ client: any Client) async throws -> GoogleToken  {
+        
+        let percentDecoded = code.removingPercentEncoding ?? code
+
+        let url = Endpoint.token.rawValue
         
         let clientId = Environment.get("GOOGLE_CLIENT_ID")!
         let clientSecret = Environment.get("GOOGLE_CLIENT_SECRET")!
         let redirectURI = Environment.get("GOOGLE_REDIRECT_URI")!
     
         let params = [
+            "code": percentDecoded,
             "client_id": clientId,
             "client_secret": clientSecret,
-            "code": code,
-            "grant_type": "authorization_code",
-            "redirect_uri": redirectURI
+            "redirect_uri": redirectURI,
+            "grant_type": "authorization_code"
         ]
         
-        do {
-            
-            let response = try await client.post(URI(string: url)) { request in
-                try request.content.encode(params, as: .urlEncodedForm)
-            }
-            
-            print(response.content.contentType ?? "Unknown content type")
-            
-            let token = try response.content.decode(GoogleToken.self)
-            
-            return token
-        }
-        catch {
-            print(error)
+        let response = try await client.post(URI(string: url)) { request in
+            try request.content.encode(params, as: .urlEncodedForm)
         }
         
-        return .init(
-            accessToken: .empty,
-            refreshToken: .empty,
-            expiresIn: .min,
-            tokenType: .empty,
-            scope: .empty
-        )
+        let token = try response.content.decode(GoogleToken.self)
+        
+        return token
+    }
+    
+    private func fetchUserInfo(using token: GoogleToken, _ client: any Client) async throws -> GoogleUser {
+        let url = Endpoint.profile.rawValue
+        let header = ("Authorization", "Bearer \(token.accessToken)")
+        let response = try await client.get(URI(string: url), headers: .init([header]))
+        let user = try response.content.decode(GoogleUser.self)
+        return user
     }
 }
