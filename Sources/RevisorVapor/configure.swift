@@ -1,4 +1,5 @@
 import Vapor
+import JWT
 
 // configures your application
 public func configure(_ app: Application) async throws {
@@ -13,6 +14,10 @@ public func configure(_ app: Application) async throws {
     
     let cors = CORSMiddleware(configuration: corsConfiguration)
     app.middleware.use(cors)
+    
+    let secretKey = Environment.get("SECRET_KEY")!
+    await app.jwt.keys.add(hmac: .init(from: secretKey), digestAlgorithm: .sha256)
+
     // register routes
     try routes(app)
 }
