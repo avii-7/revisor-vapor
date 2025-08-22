@@ -75,7 +75,6 @@ struct GoogleAuthController: RouteCollection {
         
         let payload = UserPayload(subject: .init(value: googleUser.email))
         let jwtToken = try await req.jwt.sign(payload)
-        // Store refresh token at db
         
         let responseBody = AuthenticationResponse(success: true, token: jwtToken)
         
