@@ -8,7 +8,7 @@
 import Foundation
 import Vapor
 
-struct NewUserRequestDTO {
+struct UserDTO {
     let firstName: String
     let lastName: String
     let email: String

@@ -9,7 +9,13 @@ import Fluent
 
 protocol UserRepository: Sendable {
     
-    func createUser(_ userDTO: NewUserRequestDTO) async throws
+    func get(by email: String) async throws -> UserDTO?
+    
+    func add(_ userDTO: UserDTO) async throws
+    
+    func create(_ userDTO: UserDTO) async throws
+    
+    func update(_ userDTO: UserDTO) async throws
 }
 
 final class UserPostgresRepository: UserRepository {
@@ -24,57 +30,53 @@ final class UserPostgresRepository: UserRepository {
         db.query(User.self)
     }
     
-    func createUser(_ userDTO: NewUserRequestDTO) async throws {
+    func get(by email: String) async throws -> UserDTO? {
+        let user = try await getUser(by: email)
         
-        let tokenDTO = userDTO.token
-        
-        let token = GoogleToken(
-            accessToken: tokenDTO.accessToken,
-            refreshToken: tokenDTO.refreshToken,
-            expiresIn: tokenDTO.expiresIn,
-        )
-        
-        let user = User(
-            firstName: userDTO.firstName,
-            lastName: userDTO.lastName,
-            email: userDTO.email,
-            profilePicture: userDTO.profilePicture, token: token
-        )
-        
+        if let user {
+            return UserDTOMapper.map(user)
+        }
+        return nil
+    }
+    
+    private func getUser(by email: String) async throws -> User? {
+        let user = try await query().filter(\.$email == email).first()
+        return user
+    }
+    
+    func add(_ userDTO: UserDTO) async throws {
         do {
-            
-            try await user.create(on: db)
-            
+            if try await getUser(by: userDTO.email) != nil {
+                try await update(userDTO)
+            }
+            else { // User doesn't exists
+                try await create(userDTO)
+            }
         }
         catch {
-            print(error)
+            print(String(reflecting: error))
         }
     }
     
-//    func createUser(_ user: NewUserRequest) async throws -> UserResponse {
-//        let user = User(
-//            displayName: user.name,
-//            authProvider: "test",
-//            authProviderId: "test"
-//        )
-//        try await user.create(on: db)
-//        return UserMapper.map(from: user)
-//    }
-//    
-//    func getUsers() async throws -> [UserResponse] {
-//        try await query().all().map { UserMapper.map(from: $0) }
-//    }
-//    
-//    func getUser(id: UUID) async throws -> UserResponse? {
-//        try await query()
-//            .filter(\.$id == id)
-//            .first()
-//            .map { UserMapper.map(from: $0) }
-//    }
-//    
-//    func deleteUser(by id: UUID) async throws {
-//        try await query()
-//            .filter(\.$id == id)
-//            .delete()
-//    }
+    func create(_ userDTO: UserDTO) async throws {
+        let user = UserMapper.map(userDTO)
+        try await user.create(on: db)
+    }
+    
+    func update(_ userDTO: UserDTO) async throws {
+        if let user = try await query().filter(\.$email == userDTO.email).first() {
+            user.firstName = userDTO.firstName
+            user.lastName = userDTO.lastName
+            user.profilePicture = userDTO.profilePicture
+            user.email = userDTO.email
+            
+            user.token = .init(
+                accessToken: userDTO.token.accessToken,
+                refreshToken: userDTO.token.refreshToken,
+                expiresIn: userDTO.token.expiresIn
+            )
+            
+            try await user.update(on: db)
+        }
+    }
 }

@@ -9,16 +9,16 @@ struct UserMapper {
     
     private init() { }
     
-    static func mapToDTO(_ user: GoogleUser, token: GoogleTokenResponse) -> NewUserRequestDTO {
-        NewUserRequestDTO(
+    static func map(_ user: UserDTO) -> User {
+        User(
             firstName: user.firstName,
             lastName: user.lastName,
             email: user.email,
-            profilePicture: user.picture,
-            token: .init(
-                accessToken: token.accessToken,
-                refreshToken: token.refreshToken,
-                expiresIn: token.expiresIn
+            profilePicture: user.profilePicture,
+            token: GoogleToken(
+                accessToken: user.token.accessToken,
+                refreshToken: user.token.refreshToken,
+                expiresIn: user.token.expiresIn
             )
         )
     }

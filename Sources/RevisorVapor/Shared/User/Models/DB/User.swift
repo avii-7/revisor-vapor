@@ -18,8 +18,8 @@ final class User: Model, @unchecked Sendable {
     @Field(key: "first_name")
     var firstName: String
     
-    @OptionalField(key: "last_name")
-    var lastName: String?
+    @Field(key: "last_name")
+    var lastName: String
     
     @Field(key: "email")
     var email: String
@@ -38,7 +38,7 @@ final class User: Model, @unchecked Sendable {
 
     init() { }
     
-    init(firstName: String, lastName: String? = nil, email: String, profilePicture: String? = nil, token: GoogleToken) {
+    init(firstName: String, lastName: String, email: String, profilePicture: String? = nil, token: GoogleToken) {
         self.firstName = firstName
         self.lastName = lastName
         self.email = email
