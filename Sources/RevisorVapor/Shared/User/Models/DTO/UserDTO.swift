@@ -8,17 +8,16 @@
 import Foundation
 import Vapor
 
-struct NewUserRequestDTO: Decodable {
+struct NewUserRequestDTO {
     let firstName: String
     let lastName: String
     let email: String
     let profilePicture: String?
+    let token: GoogleTokenDTO
 }
 
-struct UserDTO: Content {
-    let id: UUID
-    let firstName: String
-    let lastName: String
-    let email: String
-    let profilePicture: String?
+struct GoogleTokenDTO {
+    let accessToken: String
+    let refreshToken: String
+    let expiresIn: Int
 }

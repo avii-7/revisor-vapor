@@ -10,13 +10,17 @@ let package = Package(
         // 💧 A server-side Swift web framework.
         .package(url: "https://github.com/vapor/vapor.git", from: "4.115.0"),
         .package(url: "https://github.com/vapor/jwt.git", .upToNextMajor(from: "5.1.2")),
+        .package(url: "https://github.com/vapor/fluent.git", .upToNextMajor(from: "4.12.0")),
+        .package(url: "https://github.com/vapor/fluent-postgres-driver.git", .upToNextMajor(from: "2.10.1")),
     ],
     targets: [
         .executableTarget(
             name: "RevisorVapor",
             dependencies: [
                 .product(name: "Vapor", package: "vapor"),
-                .product(name: "JWT", package: "jwt")
+                .product(name: "JWT", package: "jwt"),
+                .product(name: "Fluent", package: "fluent"),
+                .product(name: "FluentPostgresDriver", package: "fluent-postgres-driver")
             ],
             swiftSettings: swiftSettings
         ),

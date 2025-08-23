@@ -6,5 +6,15 @@ func routes(_ app: Application) throws {
     }
     
     let group = app.grouped("api")
-    try group.register(collection: GoogleAuthController())
+    
+    let userRepsitory: any UserRepository
+    
+    if app.environment == .testing {
+        userRepsitory = UserInMemoryRepository()
+    }
+    else {
+        userRepsitory = UserPostgresRepository(db: app.db)
+    }
+    
+    try group.register(collection: GoogleAuthController(userRepository: userRepsitory))
 }

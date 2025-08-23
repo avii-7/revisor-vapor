@@ -1,5 +1,5 @@
 //
-//  GoogleToken.swift
+//  GoogleTokenResponse.swift
 //  RevisorVapor
 //
 //  Created by Arun's Macbook on 21/08/25.
@@ -7,7 +7,7 @@
 
 import Foundation
 
-struct GoogleToken: Decodable {
+struct GoogleTokenResponse: Decodable {
     let accessToken: String
     let refreshToken: String
     let expiresIn: Int

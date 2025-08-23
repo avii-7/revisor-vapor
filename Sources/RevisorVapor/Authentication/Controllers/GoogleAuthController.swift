@@ -16,9 +16,15 @@ extension GoogleAuthController {
     }
 }
 
-struct GoogleAuthController: RouteCollection {
+struct GoogleAuthController: RouteCollection, Sendable {
     
     let authState = UUID().uuidString
+    
+    private let userRepository: any UserRepository
+    
+    init(userRepository: any UserRepository) {
+        self.userRepository = userRepository
+    }
     
     func boot(routes: any RoutesBuilder) throws {
         let group = routes.grouped(["auth", "google"])
@@ -73,17 +79,22 @@ struct GoogleAuthController: RouteCollection {
         let token = try await exchangeAuthorizationCodeForToken(using: code, req.client)
         let googleUser = try await fetchUserInfo(using: token, req.client)
         
+        let newUserRequestDTO = UserMapper.mapToDTO(googleUser, token: token)
+        try await userRepository.createUser(newUserRequestDTO)
+        
         let payload = UserPayload(subject: .init(value: googleUser.email))
         let jwtToken = try await req.jwt.sign(payload)
         
         let responseBody = AuthenticationResponse(success: true, token: jwtToken)
         
-        let response = req.redirect(to: "/")
+        let clientRedirectURI = Environment.get("CLIENT_REDIRECT_URL")!
+        
+        let response = req.redirect(to: clientRedirectURI)
         try response.content.encode(responseBody)
         return response
     }
     
-    private func exchangeAuthorizationCodeForToken(using code: String, _ client: any Client) async throws -> GoogleToken  {
+    private func exchangeAuthorizationCodeForToken(using code: String, _ client: any Client) async throws -> GoogleTokenResponse  {
         
         let percentDecoded = code.removingPercentEncoding ?? code
 
@@ -105,12 +116,12 @@ struct GoogleAuthController: RouteCollection {
             try request.content.encode(params, as: .urlEncodedForm)
         }
         
-        let token = try response.content.decode(GoogleToken.self)
+        let token = try response.content.decode(GoogleTokenResponse.self)
         
         return token
     }
     
-    private func fetchUserInfo(using token: GoogleToken, _ client: any Client) async throws -> GoogleUser {
+    private func fetchUserInfo(using token: GoogleTokenResponse, _ client: any Client) async throws -> GoogleUser {
         let url = Endpoint.profile.rawValue
         let header = ("Authorization", "Bearer \(token.accessToken)")
         let response = try await client.get(URI(string: url), headers: .init([header]))
