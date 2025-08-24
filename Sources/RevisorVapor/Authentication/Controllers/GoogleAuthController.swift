@@ -44,7 +44,7 @@ struct GoogleAuthController: RouteCollection, Sendable {
             "scope": "openid profile email",
             "access_type": "offline",
             "state": authState,
-            "prompt": "consent"
+            "prompt": "consent select_account"
         ]
         
         baseUrl.append(queryItems: params.toQueryItems())
@@ -85,12 +85,9 @@ struct GoogleAuthController: RouteCollection, Sendable {
         let payload = UserPayload(subject: .init(value: googleUser.email))
         let jwtToken = try await req.jwt.sign(payload)
         
-        let responseBody = AuthenticationResponse(success: true, token: jwtToken)
-        
-        let clientRedirectURI = Environment.get("CLIENT_REDIRECT_URL")!
-        
+        var clientRedirectURI = Environment.get("CLIENT_REDIRECT_URL")!
+        clientRedirectURI += "?token=\(jwtToken)"
         let response = req.redirect(to: clientRedirectURI)
-        try response.content.encode(responseBody)
         return response
     }
     
