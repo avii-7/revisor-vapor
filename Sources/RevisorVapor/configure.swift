@@ -25,7 +25,7 @@ public func configure(_ app: Application) async throws {
     let corsConfiguration = CORSMiddleware.Configuration(
         allowedOrigin: .custom("http://localhost:3000"),
         allowedMethods: [.GET, .POST, .PUT, .DELETE],
-        allowedHeaders: []
+        allowedHeaders: [.authorization]
     )
     
     let cors = CORSMiddleware(configuration: corsConfiguration)

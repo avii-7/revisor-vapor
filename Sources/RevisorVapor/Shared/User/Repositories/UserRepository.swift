@@ -45,16 +45,11 @@ final class UserPostgresRepository: UserRepository {
     }
     
     func add(_ userDTO: UserDTO) async throws {
-        do {
-            if try await getUser(by: userDTO.email) != nil {
-                try await update(userDTO)
-            }
-            else { // User doesn't exists
-                try await create(userDTO)
-            }
+        if try await getUser(by: userDTO.email) != nil {
+            try await update(userDTO)
         }
-        catch {
-            print(String(reflecting: error))
+        else { // User doesn't exists
+            try await create(userDTO)
         }
     }
     

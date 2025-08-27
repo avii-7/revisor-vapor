@@ -8,6 +8,7 @@
 import Foundation
 import Vapor
 
+// For internal use.
 struct UserDTO {
     let firstName: String
     let lastName: String
