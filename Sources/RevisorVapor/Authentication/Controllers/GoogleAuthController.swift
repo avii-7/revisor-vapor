@@ -79,7 +79,7 @@ struct GoogleAuthController: RouteCollection, Sendable {
         let token = try await exchangeAuthorizationCodeForToken(using: code, req.client)
         let googleUser = try await fetchUserInfo(using: token, req.client)
         
-        let newUserRequestDTO = UserDTOMapper.map(googleUser, token: token)
+        let newUserRequestDTO = UserMapper.map(googleUser, token: token)
         try await userRepository.add(newUserRequestDTO)
         
         let payload = UserPayload(subject: .init(value: googleUser.email))

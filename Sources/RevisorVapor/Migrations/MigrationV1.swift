@@ -23,9 +23,33 @@ struct MigrationV1: AsyncMigration {
             .field("updated_at", .datetime)
             .unique(on: "email")
             .create()
+        
+        try await database.schema(RevisionItem.schema)
+            .id()
+            .field("user_id", .uuid, .required)
+            .field("title", .string, .required)
+            .field("description", .string)
+            .field("revisionCount", .int, .required)
+            .field("created_at", .datetime)
+            .field("updated_at", .datetime)
+            .foreignKey("user_id", references: User.schema, "id")
+            .create()
+        
+        let difficultyLevel = try await database.enum(DifficultyLevel.name)
+            .case(DifficultyLevel.default.rawValue)
+            .case(DifficultyLevel.easy.rawValue)
+            .case(DifficultyLevel.medium.rawValue)
+            .case(DifficultyLevel.hard.rawValue)
+            .create()
+        
+        try await database.schema(RevisionItem.schema)
+            .field("difficulty_level", difficultyLevel, .required)
+            .update()
     }
     
     func revert(on database: any Database) async throws {
         try await database.schema(User.schema).delete()
+        try await database.enum(DifficultyLevel.name).delete()
+        try await database.schema(RevisionItem.schema).delete()
     }
 }

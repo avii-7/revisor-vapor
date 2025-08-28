@@ -7,33 +7,36 @@
 
 final class UserInMemoryRepository: UserRepository, @unchecked Sendable {
     
-    private var users: [UserDTO]
+    private var users: [GoogleUserDTO]
     
-    init(users: [UserDTO] = []) {
+    init(users: [GoogleUserDTO] = []) {
         self.users = users
     }
     
     func get(by email: String) async throws -> UserDTO? {
-        users.first { $0.email == email }
+//        if let user = users.first(where: { $0.email == email }) {
+//            return UserMapper.map(user)
+//        }
+        return nil
     }
     
-    func add(_ userDTO: UserDTO) async throws {
+    func add(_ userDTO: GoogleUserDTO) async throws {
         
-        let existingUserDTO = try await get(by: userDTO.email)
-        
-        if let existingUserDTO {
-            try await update(existingUserDTO)
-        }
-        else {
-            try await create(userDTO)
-        }
+//        let existingUserDTO = try await get(by: userDTO.email)
+//        
+//        if let existingUserDTO {
+//            try await update(existingUserDTO)
+//        }
+//        else {
+//            try await create(userDTO)
+//        }
     }
     
-    func create(_ userDTO: UserDTO) async throws {
+    func create(_ userDTO: GoogleUserDTO) async throws {
         users.append(userDTO)
     }
     
-    func update(_ userDTO: UserDTO) async throws {
+    func update(_ userDTO: GoogleUserDTO) async throws {
         let index = users.firstIndex { $0.email == userDTO.email }!
         users[index] = userDTO
     }

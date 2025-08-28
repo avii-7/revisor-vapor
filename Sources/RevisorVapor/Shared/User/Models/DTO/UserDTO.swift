@@ -8,8 +8,16 @@
 import Foundation
 import Vapor
 
-// For internal use.
 struct UserDTO {
+    let id: UUID
+    let firstName: String
+    let lastName: String
+    let email: String
+    let profilePicture: String?
+    let token: GoogleTokenDTO
+}
+
+struct GoogleUserDTO {
     let firstName: String
     let lastName: String
     let email: String

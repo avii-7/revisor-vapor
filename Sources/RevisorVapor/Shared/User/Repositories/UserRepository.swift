@@ -4,18 +4,18 @@
 //
 //  Created by Arun's Macbook on 22/08/25.
 //
-import Vapor
+
 import Fluent
 
 protocol UserRepository: Sendable {
     
     func get(by email: String) async throws -> UserDTO?
     
-    func add(_ userDTO: UserDTO) async throws
+    func add(_ userDTO: GoogleUserDTO) async throws
     
-    func create(_ userDTO: UserDTO) async throws
+    func create(_ userDTO: GoogleUserDTO) async throws
     
-    func update(_ userDTO: UserDTO) async throws
+    func update(_ userDTO: GoogleUserDTO) async throws
 }
 
 final class UserPostgresRepository: UserRepository {
@@ -34,7 +34,7 @@ final class UserPostgresRepository: UserRepository {
         let user = try await getUser(by: email)
         
         if let user {
-            return UserDTOMapper.map(user)
+            return UserMapper.map(user)
         }
         return nil
     }
@@ -44,7 +44,7 @@ final class UserPostgresRepository: UserRepository {
         return user
     }
     
-    func add(_ userDTO: UserDTO) async throws {
+    func add(_ userDTO: GoogleUserDTO) async throws {
         if try await getUser(by: userDTO.email) != nil {
             try await update(userDTO)
         }
@@ -53,12 +53,12 @@ final class UserPostgresRepository: UserRepository {
         }
     }
     
-    func create(_ userDTO: UserDTO) async throws {
+    func create(_ userDTO: GoogleUserDTO) async throws {
         let user = UserMapper.map(userDTO)
         try await user.create(on: db)
     }
     
-    func update(_ userDTO: UserDTO) async throws {
+    func update(_ userDTO: GoogleUserDTO) async throws {
         if let user = try await query().filter(\.$email == userDTO.email).first() {
             user.firstName = userDTO.firstName
             user.lastName = userDTO.lastName

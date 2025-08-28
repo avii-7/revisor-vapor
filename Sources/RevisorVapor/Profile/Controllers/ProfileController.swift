@@ -8,6 +8,7 @@
 import Vapor
 
 struct ProfileDTO: Content {
+    let userId: UUID
     let firstName: String
     let lastName: String
     let email: String
@@ -33,7 +34,9 @@ struct ProfileController: RouteCollection, Sendable {
             throw Abort(.notFound)
         }
         
+        
         let profile = ProfileDTO(
+            userId: user.id,
             firstName: user.firstName,
             lastName: user.lastName,
             email: user.email,
