@@ -28,13 +28,15 @@ struct ProfileController: RouteCollection, Sendable {
     }
     
     private func getProfile(_ req: Request) async throws -> Response {
-        let email = try req.content.decode(String.self)
+        let userId = try req.content.decode(String.self)
         
-        guard let user = try await userRepository.get(by: email) else {
+        guard
+            let userUUID = UUID(uuidString: userId),
+            let user = try await userRepository.get(by: userUUID) else {
+            
             throw Abort(.notFound)
         }
-        
-        
+
         let profile = ProfileDTO(
             userId: user.id,
             firstName: user.firstName,

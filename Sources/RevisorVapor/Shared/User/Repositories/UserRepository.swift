@@ -9,13 +9,14 @@ import Fluent
 
 protocol UserRepository: Sendable {
     
-    func get(by email: String) async throws -> UserDTO?
+    @discardableResult
+    func add(_ userDTO: GoogleUserDTO) async throws -> UserDTO
     
-    func add(_ userDTO: GoogleUserDTO) async throws
+    func get(by id: UUID) async throws -> UserDTO?
     
-    func create(_ userDTO: GoogleUserDTO) async throws
+    func create(_ userDTO: GoogleUserDTO) async throws -> UserDTO
     
-    func update(_ userDTO: GoogleUserDTO) async throws
+    func  update(_ userDTO: GoogleUserDTO, with id: UUID) async throws -> UserDTO
 }
 
 final class UserPostgresRepository: UserRepository {
@@ -30,48 +31,65 @@ final class UserPostgresRepository: UserRepository {
         db.query(User.self)
     }
     
-    func get(by email: String) async throws -> UserDTO? {
-        let user = try await getUser(by: email)
-        
-        if let user {
-            return UserMapper.map(user)
-        }
-        return nil
-    }
-    
     private func getUser(by email: String) async throws -> User? {
         let user = try await query().filter(\.$email == email).first()
         return user
     }
     
-    func add(_ userDTO: GoogleUserDTO) async throws {
-        if try await getUser(by: userDTO.email) != nil {
-            try await update(userDTO)
+    func get(by id: UUID) async throws -> UserDTO? {
+        if let user = try await query().filter(\.$id == id).first() {
+            return UserMapper.map(user)
         }
-        else { // User doesn't exists
+        return nil
+    }
+    
+    func add(_ userDTO: GoogleUserDTO) async throws -> UserDTO {
+        if let user = try await getUser(by: userDTO.email) {
+            try await update(userDTO, with: user.id!)
+        }
+        else {
             try await create(userDTO)
         }
     }
     
-    func create(_ userDTO: GoogleUserDTO) async throws {
-        let user = UserMapper.map(userDTO)
+    func create(_ userDTO: GoogleUserDTO) async throws -> UserDTO {
+        
+        let user = User(
+            firstName: userDTO.firstName,
+            lastName: userDTO.lastName,
+            email: userDTO.email,
+            profilePicture: userDTO.profilePicture,
+            token: GoogleToken(
+                accessToken: userDTO.token.accessToken,
+                refreshToken: userDTO.token.refreshToken,
+                expiresIn: userDTO.token.expiresIn
+            )
+        )
+        
         try await user.create(on: db)
+        
+        return UserMapper.map(user)
     }
     
-    func update(_ userDTO: GoogleUserDTO) async throws {
-        if let user = try await query().filter(\.$email == userDTO.email).first() {
+    func update(_ userDTO: GoogleUserDTO, with id: UUID) async throws -> UserDTO {
+        if let user = try await query().filter(\.$id == id).first() {
             user.firstName = userDTO.firstName
             user.lastName = userDTO.lastName
             user.profilePicture = userDTO.profilePicture
             user.email = userDTO.email
             
-            user.token = .init(
+            user.token = GoogleToken(
                 accessToken: userDTO.token.accessToken,
                 refreshToken: userDTO.token.refreshToken,
                 expiresIn: userDTO.token.expiresIn
             )
             
             try await user.update(on: db)
+            
+            return UserMapper.map(user)
+        }
+        else {
+            throw FluentError.noResults
         }
     }
 }
