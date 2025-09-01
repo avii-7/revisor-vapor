@@ -16,17 +16,16 @@ final class RevisionItemsController: RouteCollection, Sendable {
     }
     
     func boot(routes: any RoutesBuilder) throws {
-        routes.get("revise-items/:userId", use: getAllItems)
+        routes.get("revise-items", use: getAllItems)
+        routes.post("revise-items", use: createItem)
     }
     
     private func getAllItems(_ req: Request) async throws -> Response {
-        let userIdString = try req.parameters.require("userId")
-                
-        guard let userId = UUID(uuidString: userIdString) else {
-            throw Abort(.badRequest)
-        }
+        
+        let userAuthenticable = try req.auth.require(UserAuthenticatable.self)
+        let userId = userAuthenticable.userId
 
-        let items = try await repository.getAll(for: userId)
+        let items: [RevisionItemResponseDTO] = try await repository.getAll(for: userId)
         
         let response = Response()
         try response.content.encode(items)
@@ -34,16 +33,14 @@ final class RevisionItemsController: RouteCollection, Sendable {
     }
     
     private func createItem(_ req: Request) async throws -> Response {
-        let userIdString = try req.parameters.require("userId")
-        let itemDTO = try req.content.decode(RevisionItemRequestDTO.self)
+        let userAuthenticable = try req.auth.require(UserAuthenticatable.self)
+        let userId = userAuthenticable.userId
         
-        guard let userId = UUID(uuidString: userIdString) else {
-            throw Abort(.badRequest)
-        }
+        let itemDTO = try req.content.decode(RevisionItemRequestDTO.self)
 
         try await repository.create(itemDTO, for: userId)
         
-        let response = Response()
+        let response = Response(status: .created)
         return response
     }
 }

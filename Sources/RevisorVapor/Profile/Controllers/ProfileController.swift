@@ -28,12 +28,12 @@ struct ProfileController: RouteCollection, Sendable {
     }
     
     private func getProfile(_ req: Request) async throws -> Response {
-        let userId = try req.content.decode(String.self)
         
-        guard
-            let userUUID = UUID(uuidString: userId),
-            let user = try await userRepository.get(by: userUUID) else {
-            
+        let userAuthenticable = try req.auth.require(UserAuthenticatable.self)
+        
+        let userId = userAuthenticable.userId
+        
+        guard let user = try await userRepository.get(by: userId) else {
             throw Abort(.notFound)
         }
 

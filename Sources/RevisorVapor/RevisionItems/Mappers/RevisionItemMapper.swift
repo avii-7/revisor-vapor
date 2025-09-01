@@ -14,14 +14,12 @@ struct RevisionItemMapper {
     static func map(_ revisionItem: RevisionItem) -> RevisionItemResponseDTO {
         RevisionItemResponseDTO(
             id: revisionItem.id!,
-            userId: revisionItem.userId,
             title: revisionItem.title,
             content: revisionItem.content,
             revisionCount: revisionItem.revisionCount,
             difficulty: revisionItem.diffilcultyLevel.rawValue
         )
     }
-    
     
     static func map(_ dto: RevisionItemRequestDTO, userId: UUID) -> RevisionItem {
         RevisionItem(

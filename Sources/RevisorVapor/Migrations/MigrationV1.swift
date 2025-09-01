@@ -28,8 +28,8 @@ struct MigrationV1: AsyncMigration {
             .id()
             .field("user_id", .uuid, .required)
             .field("title", .string, .required)
-            .field("description", .string)
-            .field("revisionCount", .int, .required)
+            .field("content", .string, .required)
+            .field("revision_count", .int, .required)
             .field("created_at", .datetime)
             .field("updated_at", .datetime)
             .foreignKey("user_id", references: User.schema, "id")
@@ -43,7 +43,7 @@ struct MigrationV1: AsyncMigration {
             .create()
         
         try await database.schema(RevisionItem.schema)
-            .field("difficulty_level", difficultyLevel, .required)
+            .field(.init(stringLiteral: DifficultyLevel.name), difficultyLevel, .required)
             .update()
     }
     

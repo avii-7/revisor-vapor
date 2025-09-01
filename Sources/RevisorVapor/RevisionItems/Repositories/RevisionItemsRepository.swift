@@ -15,7 +15,7 @@ protocol RevisionItemsRepository: Sendable {
     func create(_ dto: RevisionItemRequestDTO, for userId: UUID) async throws
 }
 
-final class RevisionItemPostgresRepository: RevisionItemsRepository {
+final class RevisionItemsPostgresRepository: RevisionItemsRepository {
     
     private let db: any Database
     

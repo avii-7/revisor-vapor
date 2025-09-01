@@ -20,6 +20,10 @@ func routes(_ app: Application) throws {
     try group.register(collection: GoogleAuthController(userRepository: userRepsitory))
     
     let protectedGroup = group.grouped(UserAuthenticator())
+        .grouped(UserAuthenticatable.guardMiddleware())
     
     try protectedGroup.register(collection: ProfileController(userRepository: userRepsitory))
+    
+    let repository = RevisionItemsPostgresRepository(db: app.db)
+    try protectedGroup.register(collection: RevisionItemsController(repository: repository))
 }

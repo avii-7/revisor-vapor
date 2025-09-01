@@ -2,7 +2,7 @@
 //  RevisionItemDTO.swift
 //  RevisorVapor
 //
-//  Created by Avii 🔥  on 28/08/25.
+//  Created by Avii 🔥 on 28/08/25.
 //
 
 import Foundation
@@ -11,8 +11,6 @@ import Vapor
 struct RevisionItemResponseDTO: Content {
     
     let id: UUID
-    
-    let userId: UUID
     
     let title: String
     
