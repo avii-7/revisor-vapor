@@ -24,6 +24,6 @@ func routes(_ app: Application) throws {
     
     try protectedGroup.register(collection: ProfileController(userRepository: userRepsitory))
     
-    let repository = RevisionItemsPostgresRepository(db: app.db)
-    try protectedGroup.register(collection: RevisionItemsController(repository: repository))
+    let repository = RevisionItemPostgresRepository(db: app.db)
+    try protectedGroup.register(collection: RevisionItemController(repository: repository))
 }

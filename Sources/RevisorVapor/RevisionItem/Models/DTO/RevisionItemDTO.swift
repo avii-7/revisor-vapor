@@ -31,3 +31,16 @@ struct RevisionItemRequestDTO: Content {
     
     let difficulty: String
 }
+
+struct RevisionItemPatchRequestDTO: Decodable {
+    
+    let itemId: UUID
+    
+    let title: String?
+    
+    let content: String?
+    
+    let revisionCount: Int?
+    
+    let difficulty: String? // TODO: - Try to update with enum
+}
