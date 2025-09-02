@@ -15,6 +15,8 @@ protocol RevisionItemRepository: Sendable {
     func create(_ dto: RevisionItemRequestDTO, for userId: UUID) async throws
     
     func update(_ dto: RevisionItemPatchRequestDTO, for userId: UUID) async throws
+    
+    func delete(itemId: UUID, for userId: UUID) async throws
 }
 
 final class RevisionItemPostgresRepository: RevisionItemRepository {
@@ -44,7 +46,7 @@ final class RevisionItemPostgresRepository: RevisionItemRepository {
         
         guard let dbItem = try await query()
             .filter(\.$userId == userId)
-            .filter(\.$id == dto.itemId)
+            .filter(\.$id == dto.id)
             .first() else {
             // TODO: - Throw error if not found
             return
@@ -67,5 +69,17 @@ final class RevisionItemPostgresRepository: RevisionItemRepository {
         }
         
         try await dbItem.update(on: db)
+    }
+    
+    func delete(itemId: UUID, for userId: UUID) async throws {
+        guard let dbItem = try await query()
+            .filter(\.$userId == userId)
+            .filter(\.$id == itemId)
+            .first() else {
+            // TODO: - Throw error if not found
+            return
+        }
+        
+        try await dbItem.delete(on: db)
     }
 }

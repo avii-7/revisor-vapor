@@ -7,6 +7,13 @@
 
 import Vapor
 
+extension RevisionItemController {
+    
+    enum Endpoint: String {
+        case reviseItems = "revise-items"
+    }
+}
+
 final class RevisionItemController: RouteCollection, Sendable {
     
     private let repository: any RevisionItemRepository
@@ -16,9 +23,12 @@ final class RevisionItemController: RouteCollection, Sendable {
     }
     
     func boot(routes: any RoutesBuilder) throws {
-        routes.get("revise-items", use: getAllItems)
-        routes.post("revise-items", use: createItem)
-        routes.patch("revise-items", use: updateCount)
+        
+        let endpoint = PathComponent(stringLiteral: Endpoint.reviseItems.rawValue)
+        routes.get(endpoint, use: getAllItems)
+        routes.post(endpoint, use: createItem)
+        routes.patch(endpoint, use: updateItem)
+        routes.delete(endpoint, ":itemId", use: deleteItem)
     }
     
     private func getAllItems(_ req: Request) async throws -> Response {
@@ -45,7 +55,7 @@ final class RevisionItemController: RouteCollection, Sendable {
         return response
     }
     
-    private func updateCount(_ req: Request) async throws -> Response {
+    private func updateItem(_ req: Request) async throws -> Response {
         let userAuthenticable = try req.auth.require(UserAuthenticatable.self)
         let userId = userAuthenticable.userId
         
@@ -53,7 +63,22 @@ final class RevisionItemController: RouteCollection, Sendable {
         
         try await repository.update(itemDTO, for: userId)
         
-        let response = Response(status: .accepted)
+        let response = Response()
+        return response
+    }
+    
+    private func deleteItem(_ req: Request) async throws -> Response {
+        let userAuthenticable = try req.auth.require(UserAuthenticatable.self)
+        let userId = userAuthenticable.userId
+        
+        let itemIdString = try req.parameters.require("itemId")
+        guard let itemId = UUID(uuidString: itemIdString) else {
+            throw Abort(.badRequest)
+        }
+        
+        try await repository.delete(itemId: itemId, for: userId)
+        
+        let response = Response()
         return response
     }
 }

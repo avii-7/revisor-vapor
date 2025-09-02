@@ -19,6 +19,23 @@ struct RevisionItemResponseDTO: Content {
     let revisionCount: Int
     
     let difficulty: String
+    
+    enum CodingKeys: String, CodingKey {
+        case id
+        case title
+        case content
+        case revisionCount = "revision_count"
+        case difficulty
+    }
+    
+    func encode(to encoder: any Encoder) throws {
+        var container = encoder.container(keyedBy: CodingKeys.self)
+        try container.encode(self.id, forKey: .id)
+        try container.encode(self.title, forKey: .title)
+        try container.encode(self.content, forKey: .content)
+        try container.encode(self.revisionCount, forKey: .revisionCount)
+        try container.encode(self.difficulty, forKey: .difficulty)
+    }
 }
 
 struct RevisionItemRequestDTO: Content {
@@ -34,7 +51,7 @@ struct RevisionItemRequestDTO: Content {
 
 struct RevisionItemPatchRequestDTO: Decodable {
     
-    let itemId: UUID
+    let id: UUID
     
     let title: String?
     
