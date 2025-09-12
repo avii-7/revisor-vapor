@@ -19,7 +19,7 @@ protocol UserRepository: Sendable {
     func  update(_ userDTO: GoogleUserDTO, with id: UUID) async throws -> UserDTO
 }
 
-final class UserPostgresRepository: UserRepository {
+struct UserPostgresRepository: UserRepository {
     
     private let db: any Database
     

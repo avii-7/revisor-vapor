@@ -12,7 +12,7 @@ final class User: Model, @unchecked Sendable {
     
     static let schema = "users"
     
-    @ID(key: .id)
+    @ID
     var id: UUID?
     
     @Field(key: "first_name")

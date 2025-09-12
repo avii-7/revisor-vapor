@@ -21,6 +21,7 @@ public func configure(_ app: Application) async throws {
     )
     
     app.migrations.add(MigrationV1())
+    app.migrations.add(CategoryTagsSeed())
 
     let corsConfiguration = CORSMiddleware.Configuration(
         allowedOrigin: .custom("http://localhost:3000"),

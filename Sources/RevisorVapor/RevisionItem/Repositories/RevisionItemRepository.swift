@@ -19,7 +19,7 @@ protocol RevisionItemRepository: Sendable {
     func delete(itemId: UUID, for userId: UUID) async throws
 }
 
-final class RevisionItemPostgresRepository: RevisionItemRepository {
+struct RevisionItemPostgresRepository: RevisionItemRepository {
     
     private let db: any Database
     

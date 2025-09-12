@@ -24,12 +24,30 @@ struct MigrationV1: AsyncMigration {
             .unique(on: "email")
             .create()
         
+        try await database.schema(RevisionItemCategory.schema)
+            .id()
+            .field("user_id", .uuid)
+            .field("title", .string, .required)
+            .field("isPredefined", .bool, .required)
+            .foreignKey("user_id", references: User.schema, "id")
+            .create()
+        
+        try await database.schema(RevisionItemTag.schema)
+            .id()
+            .field("user_id", .uuid)
+            .field("title", .string, .required)
+            .field("isPredefined", .bool, .required)
+            .foreignKey("user_id", references: User.schema, "id")
+            .create()
+        
         try await database.schema(RevisionItem.schema)
             .id()
             .field("user_id", .uuid, .required)
             .field("title", .string, .required)
             .field("content", .string, .required)
             .field("revision_count", .int, .required)
+            .field("categories", .array(of: .string), .required)
+            .field("tags", .array(of: .string), .required)
             .field("created_at", .datetime)
             .field("updated_at", .datetime)
             .foreignKey("user_id", references: User.schema, "id")
@@ -49,6 +67,10 @@ struct MigrationV1: AsyncMigration {
     
     func revert(on database: any Database) async throws {
         try await database.schema(User.schema).delete()
+        
+        try await database.schema(RevisionItemCategory.schema).delete()
+        try await database.schema(RevisionItemTag.schema).delete()
+        
         try await database.enum(DifficultyLevel.name).delete()
         try await database.schema(RevisionItem.schema).delete()
     }

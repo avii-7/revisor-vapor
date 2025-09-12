@@ -12,7 +12,7 @@ final class RevisionItem: Model, @unchecked Sendable {
     
     static let schema = "revision_items"
     
-    @ID(key: .id)
+    @ID
     var id: UUID?
     
     @Field(key: "user_id")
@@ -30,6 +30,12 @@ final class RevisionItem: Model, @unchecked Sendable {
     @Enum(key: "difficulty_level")
     var diffilcultyLevel: DifficultyLevel
     
+    @Field(key: "categories")
+    var categories: [String]
+    
+    @Field(key: "tags")
+    var tags: [String]
+    
     @Timestamp(key: "created_at", on: .create)
     var createdAt: Date?
     
@@ -38,12 +44,22 @@ final class RevisionItem: Model, @unchecked Sendable {
     
     init() { }
     
-    init(userId: UUID, title: String, content: String, revisionCount: Int, diffilcultyLevel: DifficultyLevel? = .default) {
+    init(
+        userId: UUID,
+        title: String,
+        content: String,
+        revisionCount: Int,
+        diffilcultyLevel: DifficultyLevel? = .default,
+        categories: [String] = [],
+        tags: [String] = []
+    ) {
         self.userId = userId
         self.title = title
         self.content = content
         self.revisionCount = revisionCount
         self.diffilcultyLevel = diffilcultyLevel ?? .default
+        self.categories = []
+        self.tags = []
     }
 }
 
