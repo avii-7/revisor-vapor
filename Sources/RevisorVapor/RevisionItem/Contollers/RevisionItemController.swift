@@ -12,6 +12,14 @@ extension RevisionItemController {
     enum Endpoint: String {
         case reviseItems = "revise-items"
     }
+    
+    enum Parameter: String {
+        case itemId
+        
+        var pathComponent: PathComponent {
+            PathComponent(stringLiteral: ":\(self.rawValue)")
+        }
+    }
 }
 
 final class RevisionItemController: RouteCollection, Sendable {
@@ -25,10 +33,12 @@ final class RevisionItemController: RouteCollection, Sendable {
     func boot(routes: any RoutesBuilder) throws {
         
         let endpoint = PathComponent(stringLiteral: Endpoint.reviseItems.rawValue)
+        let itemId = Parameter.itemId.pathComponent
+        
         routes.get(endpoint, use: getAllItems)
         routes.post(endpoint, use: createItem)
         routes.patch(endpoint, use: updateItem)
-        routes.delete(endpoint, ":itemId", use: deleteItem)
+        routes.delete(endpoint, itemId, use: deleteItem)
     }
     
     private func getAllItems(_ req: Request) async throws -> Response {
@@ -71,7 +81,7 @@ final class RevisionItemController: RouteCollection, Sendable {
         let userAuthenticable = try req.auth.require(UserAuthenticatable.self)
         let userId = userAuthenticable.userId
         
-        let itemIdString = try req.parameters.require("itemId")
+        let itemIdString = try req.parameters.require(Parameter.itemId.rawValue)
         guard let itemId = UUID(uuidString: itemIdString) else {
             throw Abort(.badRequest)
         }
