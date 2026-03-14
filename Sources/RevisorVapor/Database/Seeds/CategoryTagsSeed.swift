@@ -20,5 +20,5 @@ struct CategoryTagsSeed: AsyncMigration {
         try await tagModels.create(on: database)
     }
     
-    func revert(on database: any FluentKit.Database) async throws { }
+    func revert(on database: any Database) async throws { }
 }

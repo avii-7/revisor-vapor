@@ -7,9 +7,7 @@
 
 import Foundation
 
-struct UserMapper {
-    
-    private init() { }
+enum UserMapper {
 
     static func map(_ user: GoogleUser, token: GoogleTokenResponse) -> GoogleUserDTO {
         GoogleUserDTO(

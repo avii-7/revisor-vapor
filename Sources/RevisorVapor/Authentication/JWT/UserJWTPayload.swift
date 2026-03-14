@@ -1,5 +1,5 @@
 //
-//  UserPayload.swift
+//  UserJWTPayload.swift
 //  RevisorVapor
 //
 //  Created by Arun's Macbook on 22/08/25.
@@ -7,7 +7,7 @@
 
 import JWT
 
-struct UserPayload: JWTPayload {
+struct UserJWTPayload: JWTPayload {
     
     let issuer = IssuerClaim(value: "revisor")
     

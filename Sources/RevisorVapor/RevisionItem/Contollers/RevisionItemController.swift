@@ -45,12 +45,19 @@ final class RevisionItemController: RouteCollection, Sendable {
         
         let userAuthenticable = try req.auth.require(UserAuthenticatable.self)
         let userId = userAuthenticable.userId
-
-        let items: [RevisionItemResponseDTO] = try await repository.getAll(for: userId)
         
-        let response = Response()
-        try response.content.encode(items)
-        return response
+        do {
+            
+            let items: [RevisionItemResponseDTO] = try await repository.getAll(for: userId)
+            
+            let response = Response()
+            try response.content.encode(items)
+            return response
+        }
+        catch {
+            print(error)
+            return Response.init(status: .internalServerError)
+        }
     }
     
     private func createItem(_ req: Request) async throws -> Response {

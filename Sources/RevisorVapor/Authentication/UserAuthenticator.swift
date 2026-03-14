@@ -14,7 +14,7 @@ struct UserAuthenticatable: Authenticatable {
 struct UserAuthenticator: AsyncBearerAuthenticator {
     
     func authenticate(bearer: BearerAuthorization, for request: Request) async throws {
-        let payload = try await request.jwt.verify(as: UserPayload.self)
+        let payload = try await request.jwt.verify(as: UserJWTPayload.self)
         let userIdString = payload.subject.value
         
         if let userId = UUID(uuidString: userIdString) {

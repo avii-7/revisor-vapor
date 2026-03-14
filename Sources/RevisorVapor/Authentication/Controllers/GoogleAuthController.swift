@@ -83,7 +83,7 @@ struct GoogleAuthController: RouteCollection, Sendable {
         let newUserRequestDTO = UserMapper.map(googleUser, token: token)
         let userDTO = try await userRepository.add(newUserRequestDTO)
         
-        let payload = UserPayload(subject: .init(value: userDTO.id.uuidString))
+        let payload = UserJWTPayload(subject: .init(value: userDTO.id.uuidString))
         let jwtToken = try await req.jwt.sign(payload)
         
         var clientRedirectURI = Environment.get("CLIENT_REDIRECT_URL")!

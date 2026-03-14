@@ -14,9 +14,7 @@ protocol UserRepository: Sendable {
     
     func get(by id: UUID) async throws -> UserDTO?
     
-    func create(_ userDTO: GoogleUserDTO) async throws -> UserDTO
-    
-    func  update(_ userDTO: GoogleUserDTO, with id: UUID) async throws -> UserDTO
+    func update(_ userDTO: GoogleUserDTO, with id: UUID) async throws -> UserDTO
 }
 
 struct UserPostgresRepository: UserRepository {
@@ -52,7 +50,7 @@ struct UserPostgresRepository: UserRepository {
         }
     }
     
-    func create(_ userDTO: GoogleUserDTO) async throws -> UserDTO {
+    private func create(_ userDTO: GoogleUserDTO) async throws -> UserDTO {
         
         let user = User(
             firstName: userDTO.firstName,

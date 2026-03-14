@@ -30,11 +30,11 @@ final class RevisionItem: Model, @unchecked Sendable {
     @Enum(key: "difficulty_level")
     var diffilcultyLevel: DifficultyLevel
     
-    @Field(key: "categories")
-    var categories: [String]
+    @Field(key: "category_ids")
+    var categoryIDs: [UUID]
     
-    @Field(key: "tags")
-    var tags: [String]
+    @Field(key: "tags_ids")
+    var tagIDs: [UUID]
     
     @Timestamp(key: "created_at", on: .create)
     var createdAt: Date?
@@ -50,16 +50,16 @@ final class RevisionItem: Model, @unchecked Sendable {
         content: String,
         revisionCount: Int,
         diffilcultyLevel: DifficultyLevel? = .default,
-        categories: [String] = [],
-        tags: [String] = []
+        categoryIDs: [UUID] = [],
+        tagIDs: [UUID] = []
     ) {
         self.userId = userId
         self.title = title
         self.content = content
         self.revisionCount = revisionCount
         self.diffilcultyLevel = diffilcultyLevel ?? .default
-        self.categories = []
-        self.tags = []
+        self.categoryIDs = categoryIDs
+        self.tagIDs = tagIDs
     }
 }
 
