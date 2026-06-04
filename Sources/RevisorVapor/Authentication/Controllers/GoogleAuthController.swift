@@ -81,9 +81,13 @@ struct GoogleAuthController: RouteCollection, Sendable {
         let googleUser = try await fetchUserInfo(using: token, req.client)
         
         let newUserRequestDTO = UserMapper.map(googleUser, token: token)
-        let userDTO = try await userRepository.add(newUserRequestDTO)
+        let user = try await userRepository.add(newUserRequestDTO)
         
-        let payload = UserJWTPayload(subject: .init(value: userDTO.id.uuidString))
+        guard let userID = user.id else {
+            return Response(status: .internalServerError)
+        }
+
+        let payload = UserJWTPayload(subject: .init(value: userID.uuidString))
         let jwtToken = try await req.jwt.sign(payload)
         
         var clientRedirectURI = Environment.get("CLIENT_REDIRECT_URL")!

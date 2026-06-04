@@ -10,12 +10,12 @@ func routes(_ app: Application) throws {
     
     let userRepsitory: any UserRepository
     
-    if app.environment == .testing {
-        userRepsitory = UserInMemoryRepository()
-    }
-    else {
+//    if app.environment == .testing {
+//        userRepsitory = UserInMemoryRepository()
+//    }
+//    else {
         userRepsitory = UserPostgresRepository(db: app.db)
-    }
+//    }
     
     try group.register(collection: GoogleAuthController(userRepository: userRepsitory))
     
@@ -26,4 +26,6 @@ func routes(_ app: Application) throws {
     
     let repository = RevisionItemPostgresRepository(db: app.db)
     try protectedGroup.register(collection: RevisionItemController(repository: repository))
+    
+    try protectedGroup.register(collection: DashboardController(userRepository: userRepsitory))
 }

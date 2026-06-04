@@ -7,12 +7,40 @@
 
 import Vapor
 
+struct UserSettingsDTO: Content {
+    let retentionRate: Double
+}
+
+extension UserSettingsDTO {
+    
+    init(_ settings: UserSettings) {
+        self.init(
+            retentionRate: settings.retentionRate
+        )
+    }
+}
+
 struct ProfileDTO: Content {
     let userId: UUID
     let firstName: String
     let lastName: String
     let email: String
     let profilePicture: String?
+    let userSettings: UserSettingsDTO
+}
+
+extension ProfileDTO {
+    
+    init(_ user: User) throws {
+        self.init(
+            userId: try user.requireID(),
+            firstName: user.firstName,
+            lastName: user.lastName,
+            email: user.email,
+            profilePicture: user.profilePicture,
+            userSettings: UserSettingsDTO(user.settings)
+        )
+    }
 }
 
 struct ProfileController: RouteCollection, Sendable {
@@ -36,14 +64,8 @@ struct ProfileController: RouteCollection, Sendable {
         guard let user = try await userRepository.get(by: userId) else {
             throw Abort(.notFound)
         }
-
-        let profile = ProfileDTO(
-            userId: user.id,
-            firstName: user.firstName,
-            lastName: user.lastName,
-            email: user.email,
-            profilePicture: user.profilePicture
-        )
+        
+        let profile = try ProfileDTO(user)
         
         let response = Response(status: .ok)
         try response.content.encode(profile)

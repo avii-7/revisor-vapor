@@ -27,6 +27,9 @@ final class User: Model, @unchecked Sendable {
     @OptionalField(key: "profile_picture")
     var profilePicture: String?
     
+    @Group(key: "settings")
+    var settings: UserSettings
+    
     @Timestamp(key: "created_at", on: .create)
     var createdAt: Date?
     
@@ -38,11 +41,24 @@ final class User: Model, @unchecked Sendable {
 
     init() { }
     
-    init(firstName: String, lastName: String, email: String, profilePicture: String? = nil, token: GoogleToken) {
+    init(firstName: String, lastName: String, email: String, profilePicture: String? = nil, token: GoogleToken, settings: UserSettings) {
         self.firstName = firstName
         self.lastName = lastName
         self.email = email
         self.profilePicture = profilePicture
         self.token = token
+        self.settings = settings
+    }
+}
+
+final class UserSettings: Fields, @unchecked Sendable {
+    
+    @Field(key: "retention_rate")
+    var retentionRate: Double
+    
+    init() { }
+    
+    init(retentionRate: Double) {
+        self.retentionRate = retentionRate
     }
 }

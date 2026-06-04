@@ -6,7 +6,7 @@
 //
 
 import Foundation
-
+/*
 final class UserInMemoryRepository: UserRepository, @unchecked Sendable {
     
     private var users: [UserDTO]
@@ -31,3 +31,4 @@ final class UserInMemoryRepository: UserRepository, @unchecked Sendable {
         fatalError("method is not implemented")
     }
 }
+*/
