@@ -27,6 +27,9 @@ final class RevisionItem: Model, @unchecked Sendable {
     @Field(key: "revision_count")
     var revisionCount: Int
     
+    @Field(key: "streak")
+    var streak: Int
+    
     @Enum(key: "difficulty_level")
     var diffilcultyLevel: DifficultyLevel
     
@@ -48,7 +51,8 @@ final class RevisionItem: Model, @unchecked Sendable {
         userId: UUID,
         title: String,
         content: String,
-        revisionCount: Int,
+        revisionCount: Int = .zero,
+        streak: Int = .zero,
         diffilcultyLevel: DifficultyLevel? = .default,
         categoryIDs: [UUID] = [],
         tagIDs: [UUID] = []
@@ -57,6 +61,7 @@ final class RevisionItem: Model, @unchecked Sendable {
         self.title = title
         self.content = content
         self.revisionCount = revisionCount
+        self.streak = streak
         self.diffilcultyLevel = diffilcultyLevel ?? .default
         self.categoryIDs = categoryIDs
         self.tagIDs = tagIDs

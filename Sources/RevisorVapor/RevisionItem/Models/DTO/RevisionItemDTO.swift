@@ -44,8 +44,6 @@ struct RevisionItemRequestDTO: Content {
     
     let content: String
     
-    let revisionCount: Int
-    
     let difficulty: String
 }
 

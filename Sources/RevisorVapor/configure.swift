@@ -13,7 +13,7 @@ public func configure(_ app: Application) async throws {
                 hostname: "localhost",
                 port: 5432,
                 username: "avii",
-                database: "revisor",
+                database: "revisor_dev",
                 tls: .disable
             )
         ),

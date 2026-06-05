@@ -16,6 +16,7 @@ struct MigrationV1: AsyncMigration {
             .field("last_name", .string, .required)
             .field("email", .string, .required)
             .field("profile_picture", .string)
+            .field("settings_retention_rate", .double, .required)
             .field("token_access_token", .string, .required)
             .field("token_refresh_token", .string, .required)
             .field("token_expires_in", .int, .required)
@@ -46,6 +47,7 @@ struct MigrationV1: AsyncMigration {
             .field("title", .string, .required)
             .field("content", .string, .required)
             .field("revision_count", .int, .required)
+            .field("streak", .int, .required)
             .field("category_ids", .array(of: .uuid), .required)
             .field("tags_ids", .array(of: .uuid), .required)
             .field("created_at", .datetime)
@@ -66,12 +68,13 @@ struct MigrationV1: AsyncMigration {
     }
     
     func revert(on database: any Database) async throws {
-        try await database.schema(User.schema).delete()
         
         try await database.schema(RevisionItemCategory.schema).delete()
         try await database.schema(RevisionItemTag.schema).delete()
-        
-        try await database.enum(DifficultyLevel.name).delete()
+
         try await database.schema(RevisionItem.schema).delete()
+        try await database.enum(DifficultyLevel.name).delete()
+        
+        try await database.schema(User.schema).delete()
     }
 }

@@ -56,6 +56,8 @@ struct DashboardController: RouteCollection, Sendable {
         
         let profile = try await getProfileDTO(using: userId)
         
+        // TODO: - needs to get first problem title.
+        
         let info = RevisionInfo(
             title: "Median of Two Sorted Array",
             subtitle: "Scheduled for today. Estimated time: 15 minutes.",

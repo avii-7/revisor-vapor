@@ -26,7 +26,6 @@ struct RevisionItemMapper {
             userId: userId,
             title: dto.title,
             content: dto.content,
-            revisionCount: dto.revisionCount,
             diffilcultyLevel: DifficultyLevel(rawValue: dto.difficulty)
         )
     }
