@@ -7,13 +7,16 @@ public func configure(_ app: Application) async throws {
     // uncomment to serve files from /Public folder
     // app.middleware.use(FileMiddleware(publicDirectory: app.directory.publicDirectory))
     
+    let config = getDBConfigs(using: app.environment)
+    
     app.databases.use(
         .postgres(
             configuration: .init(
-                hostname: "localhost",
-                port: 5432,
-                username: "avii",
-                database: "revisor_dev",
+                hostname: config.hostName,
+                port: config.port,
+                username: config.user,
+                password: config.password,
+                database: config.database,
                 tls: .disable
             )
         ),
@@ -37,4 +40,29 @@ public func configure(_ app: Application) async throws {
 
     // register routes
     try routes(app)
+}
+
+
+private func getDBConfigs(using environment: Environment) -> DBConfig {
+    
+    let dbPortString = Environment.get("DB_PORT")!
+    let dbPort = Int(dbPortString)!
+    
+    let dbConfig = DBConfig(
+        hostName: Environment.get("DB_HOST")!,
+        port: dbPort,
+        user: Environment.get("DB_USER")!,
+        password: Environment.get("DB_PASSWORD"),
+        database: Environment.get("DB_NAME")!
+    )
+    
+    return dbConfig
+}
+
+private struct DBConfig {
+    let hostName: String
+    let port: Int
+    let user: String
+    let password: String?
+    let database: String
 }
