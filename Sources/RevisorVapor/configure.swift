@@ -7,7 +7,7 @@ public func configure(_ app: Application) async throws {
     // uncomment to serve files from /Public folder
     // app.middleware.use(FileMiddleware(publicDirectory: app.directory.publicDirectory))
     
-    let config = getDBConfigs(using: app.environment)
+    let config = getDBConfigs()
     
     app.databases.use(
         .postgres(
@@ -43,7 +43,7 @@ public func configure(_ app: Application) async throws {
 }
 
 
-private func getDBConfigs(using environment: Environment) -> DBConfig {
+private func getDBConfigs() -> DBConfig {
     
     let dbPortString = Environment.get("DB_PORT")!
     let dbPort = Int(dbPortString)!
