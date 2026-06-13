@@ -18,9 +18,11 @@ x-shared_environment: &shared_environment
   
 services:
   app:
-    image: revisor-vapor:latest
+    image: revisor-vapor:latest-prod
     build:
       context: .
+    env_file:
+      - .env.production
     environment:
       <<: *shared_environment
     ports:
