@@ -48,7 +48,21 @@ final class RevisionItemController: RouteCollection, Sendable {
         
         do {
             
-            let items: [RevisionItemResponseDTO] = try await repository.getAll(for: userId)
+            var items: [RevisionItemResponseDTO] = try await repository.getAll(for: userId)
+            
+            if
+                items.isEmpty,
+                userId == UUID(uuidString: "DD4A4443-5940-40BF-A100-471A5B9D7519") {
+                items = [RevisionItemResponseDTO(
+                    id: .generateRandom(),
+                    title: "Longest Palindromic Substring",
+                    subtitle: "Mastered 2 hours ago • Level: Medium",
+                    streak: 12,
+                    content: "",
+                    revisionCount: 20,
+                    difficulty: "Medium"
+                )]
+            }
             
             let response = Response()
             try response.content.encode(items)

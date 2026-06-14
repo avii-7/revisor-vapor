@@ -9,6 +9,11 @@ public func configure(_ app: Application) async throws {
     
     let config = Environment.dbConfig
     
+    let encoder = JSONEncoder()
+    encoder.keyEncodingStrategy = .convertToSnakeCase
+    encoder.dateEncodingStrategy = .iso8601
+    ContentConfiguration.global.use(encoder: encoder, for: .json)
+    
     app.databases.use(
         .postgres(
             configuration: .init(

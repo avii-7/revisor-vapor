@@ -15,6 +15,8 @@ struct RevisionItemMapper {
         RevisionItemResponseDTO(
             id: revisionItem.id!,
             title: revisionItem.title,
+            subtitle: "Yet to be added",
+            streak: 8,
             content: revisionItem.content,
             revisionCount: revisionItem.revisionCount,
             difficulty: revisionItem.diffilcultyLevel.rawValue

@@ -21,7 +21,7 @@ extension UserSettingsDTO {
 }
 
 struct ProfileDTO: Content {
-    let userId: UUID
+    let userID: UUID
     let firstName: String
     let lastName: String
     let email: String
@@ -33,7 +33,7 @@ extension ProfileDTO {
     
     init(_ user: User) throws {
         self.init(
-            userId: try user.requireID(),
+            userID: try user.requireID(),
             firstName: user.firstName,
             lastName: user.lastName,
             email: user.email,
