@@ -69,7 +69,24 @@ final class RevisionItem: Model, @unchecked Sendable {
 }
 
 enum DifficultyLevel: String, Codable {
+    
     case `default`, easy, medium, hard
     
     static var name: String { "difficulty_level" }
+    
+    init(from decoder: any Decoder) throws {
+        let continer = try decoder.singleValueContainer()
+        let value = try continer.decode(String.self)
+        
+        let lowerCasedValue = value.lowercased()
+        
+        if let level =  DifficultyLevel(rawValue: lowerCasedValue) {
+            self = level
+        }
+        else {
+            let message = "Invalid Difficulty Value: \(value)"
+            let error = DecodingError.dataCorruptedError(in: continer, debugDescription: message)
+            throw error
+        }
+    }
 }

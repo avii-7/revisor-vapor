@@ -22,16 +22,16 @@ struct RevisionItemResponseDTO: Content {
     
     let revisionCount: Int
     
-    let difficulty: String
+    let difficulty: DifficultyLevel
 }
 
-struct RevisionItemRequestDTO: Content {
+struct RevisionItemCreateRequestDTO: Content {
     
     let title: String
     
     let content: String
     
-    let difficulty: String
+    let difficulty: DifficultyLevel
 }
 
 struct RevisionItemPatchRequestDTO: Decodable {
@@ -44,5 +44,5 @@ struct RevisionItemPatchRequestDTO: Decodable {
     
     let revisionCount: Int?
     
-    let difficulty: String? // TODO: - Try to update with enum
+    let difficulty: DifficultyLevel? // TODO: - Try to update with enum
 }

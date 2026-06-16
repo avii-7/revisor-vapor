@@ -19,16 +19,16 @@ struct RevisionItemMapper {
             streak: 8,
             content: revisionItem.content,
             revisionCount: revisionItem.revisionCount,
-            difficulty: revisionItem.diffilcultyLevel.rawValue
+            difficulty: revisionItem.diffilcultyLevel
         )
     }
     
-    static func map(_ dto: RevisionItemRequestDTO, userId: UUID) -> RevisionItem {
+    static func map(_ dto: RevisionItemCreateRequestDTO, userId: UUID) -> RevisionItem {
         RevisionItem(
             userId: userId,
             title: dto.title,
             content: dto.content,
-            diffilcultyLevel: DifficultyLevel(rawValue: dto.difficulty)
+            diffilcultyLevel: dto.difficulty
         )
     }
 }
