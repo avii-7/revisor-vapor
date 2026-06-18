@@ -14,37 +14,37 @@ struct RevisionItemResponseDTO: Content {
     
     let title: String
     
-    let content: String
+    let subtitle: String
+    
+    let streak: Int
+    
+    let content: String?
     
     let revisionCount: Int
     
-    let difficulty: String
-    
-    enum CodingKeys: String, CodingKey {
-        case id
-        case title
-        case content
-        case revisionCount = "revision_count"
-        case difficulty
-    }
-    
-    func encode(to encoder: any Encoder) throws {
-        var container = encoder.container(keyedBy: CodingKeys.self)
-        try container.encode(self.id, forKey: .id)
-        try container.encode(self.title, forKey: .title)
-        try container.encode(self.content, forKey: .content)
-        try container.encode(self.revisionCount, forKey: .revisionCount)
-        try container.encode(self.difficulty, forKey: .difficulty)
-    }
+    let difficulty: DifficultyLevel
 }
 
-struct RevisionItemRequestDTO: Content {
+struct RevisionItemCreateRequestDTO: Content {
     
     let title: String
     
-    let content: String
+    let content: String?
     
-    let difficulty: String
+    let difficulty: DifficultyLevel
+    
+    let platformUrl: String?
+    
+    let keyIntuition: String?
+    
+    let solutionCode: String?
+    
+    enum CodingKeys: String, CodingKey {
+        case title, content, difficulty
+        case platformUrl = "platform_url"
+        case keyIntuition = "key_intuition"
+        case solutionCode = "solution_code"
+    }
 }
 
 struct RevisionItemPatchRequestDTO: Decodable {
@@ -57,5 +57,5 @@ struct RevisionItemPatchRequestDTO: Decodable {
     
     let revisionCount: Int?
     
-    let difficulty: String? // TODO: - Try to update with enum
+    let difficulty: DifficultyLevel? // TODO: - Try to update with enum
 }

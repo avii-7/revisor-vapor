@@ -10,7 +10,7 @@ import Vapor
 extension RevisionItemController {
     
     enum Endpoint: String {
-        case reviseItems = "revise-items"
+        case reviseItems = "revision-items"
     }
     
     enum Parameter: String {
@@ -47,16 +47,14 @@ final class RevisionItemController: RouteCollection, Sendable {
         let userId = userAuthenticable.userId
         
         do {
-            
             let items: [RevisionItemResponseDTO] = try await repository.getAll(for: userId)
-            
             let response = Response()
             try response.content.encode(items)
             return response
         }
         catch {
             print(error)
-            return Response.init(status: .internalServerError)
+            return Response(status: .internalServerError)
         }
     }
     
@@ -64,11 +62,11 @@ final class RevisionItemController: RouteCollection, Sendable {
         let userAuthenticable = try req.auth.require(UserAuthenticatable.self)
         let userId = userAuthenticable.userId
         
-        let itemDTO = try req.content.decode(RevisionItemRequestDTO.self)
+        let itemDTO = try req.content.decode(RevisionItemCreateRequestDTO.self)
 
-        try await repository.create(itemDTO, for: userId)
-        
+        let item = try await repository.create(itemDTO, for: userId)
         let response = Response(status: .created)
+        try response.content.encode(item)
         return response
     }
     
