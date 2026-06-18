@@ -12,7 +12,7 @@ protocol RevisionItemRepository: Sendable {
     
     func getAll(for userId: UUID) async throws -> [RevisionItemResponseDTO]
     
-    func create(_ dto: RevisionItemRequestDTO, for userId: UUID) async throws
+    func create(_ dto: RevisionItemCreateRequestDTO, for userId: UUID) async throws -> RevisionItemResponseDTO
     
     func update(_ dto: RevisionItemPatchRequestDTO, for userId: UUID) async throws
     
@@ -37,9 +37,11 @@ struct RevisionItemPostgresRepository: RevisionItemRepository {
         return dtos
     }
     
-    func create(_ dto: RevisionItemRequestDTO, for userId: UUID) async throws {
+    func create(_ dto: RevisionItemCreateRequestDTO, for userId: UUID) async throws -> RevisionItemResponseDTO {
         let item = RevisionItemMapper.map(dto, userId: userId)
         try await item.create(on: db)
+        let createdItem = RevisionItemMapper.map(item)
+        return createdItem
     }
     
     func update(_ dto: RevisionItemPatchRequestDTO, for userId: UUID) async throws {
@@ -65,7 +67,7 @@ struct RevisionItemPostgresRepository: RevisionItemRepository {
         }
         
         if let difficultyLevel = dto.difficulty {
-            dbItem.diffilcultyLevel = DifficultyLevel(rawValue: difficultyLevel) ?? .default
+            dbItem.diffilcultyLevel = difficultyLevel
         }
         
         try await dbItem.update(on: db)

@@ -7,7 +7,12 @@ public func configure(_ app: Application) async throws {
     // uncomment to serve files from /Public folder
     // app.middleware.use(FileMiddleware(publicDirectory: app.directory.publicDirectory))
     
-    let config = getDBConfigs()
+    let config = Environment.dbConfig
+    
+    let encoder = JSONEncoder()
+    encoder.keyEncodingStrategy = .convertToSnakeCase
+    encoder.dateEncodingStrategy = .iso8601
+    ContentConfiguration.global.use(encoder: encoder, for: .json)
     
     app.databases.use(
         .postgres(
@@ -26,8 +31,10 @@ public func configure(_ app: Application) async throws {
     app.migrations.add(MigrationV1())
     app.migrations.add(CategoryTagsSeed())
 
+    let feURI = Environment.get(.frontendURI)!
+    
     let corsConfiguration = CORSMiddleware.Configuration(
-        allowedOrigin: .custom("http://localhost:3000"),
+        allowedOrigin: .custom(feURI),
         allowedMethods: [.GET, .POST, .PUT, .PATCH, .DELETE],
         allowedHeaders: [.authorization, .contentType, .accept, .origin, .accessControlAllowOrigin]
     )
@@ -35,34 +42,9 @@ public func configure(_ app: Application) async throws {
     let cors = CORSMiddleware(configuration: corsConfiguration)
     app.middleware.use(cors)
     
-    let secretKey = Environment.get("SECRET_KEY")!
+    let secretKey = Environment.getJWTSecretKey!
     await app.jwt.keys.add(hmac: .init(from: secretKey), digestAlgorithm: .sha256)
 
     // register routes
     try routes(app)
-}
-
-
-private func getDBConfigs() -> DBConfig {
-    
-    let dbPortString = Environment.get("DB_PORT")!
-    let dbPort = Int(dbPortString)!
-    
-    let dbConfig = DBConfig(
-        hostName: Environment.get("DB_HOST")!,
-        port: dbPort,
-        user: Environment.get("DB_USER")!,
-        password: Environment.get("DB_PASSWORD"),
-        database: Environment.get("DB_NAME")!
-    )
-    
-    return dbConfig
-}
-
-private struct DBConfig {
-    let hostName: String
-    let port: Int
-    let user: String
-    let password: String?
-    let database: String
 }
