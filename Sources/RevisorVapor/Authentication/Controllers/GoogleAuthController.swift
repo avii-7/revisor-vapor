@@ -35,8 +35,10 @@ struct GoogleAuthController: RouteCollection, Sendable {
     
     private func getGoogleAuthUrl(_ req: Request) throws -> Response {
         var baseUrl = URL(string: Endpoint.authUrl.rawValue)!
-        let redirectURI = Environment.get("GOOGLE_REDIRECT_URI")!
-        let clientId = Environment.get("GOOGLE_CLIENT_ID")!
+
+        let redirectURI = Environment.get(.googleRedirectBackend)!
+
+        let clientId = Environment.get(.googleClientID)!
         
         let params = [
             "client_id": clientId,
@@ -87,10 +89,10 @@ struct GoogleAuthController: RouteCollection, Sendable {
             return Response(status: .internalServerError)
         }
 
-        let payload = UserJWTPayload(subject: .init(value: userID.uuidString))
+        let payload = UserJWTPayload(subject: SubjectClaim(value: userID.uuidString))
         let jwtToken = try await req.jwt.sign(payload)
         
-        var clientRedirectURI = Environment.get("CLIENT_REDIRECT_URL")!
+        var clientRedirectURI = Environment.get(.googleRedirectFrontend)!
         clientRedirectURI += "?token=\(jwtToken)"
         let response = req.redirect(to: clientRedirectURI)
         return response
@@ -102,9 +104,11 @@ struct GoogleAuthController: RouteCollection, Sendable {
 
         let url = Endpoint.token.rawValue
         
-        let clientId = Environment.get("GOOGLE_CLIENT_ID")!
-        let clientSecret = Environment.get("GOOGLE_CLIENT_SECRET")!
-        let redirectURI = Environment.get("GOOGLE_REDIRECT_URI")!
+        let clientId = Environment.get(.googleClientID)!
+        
+        let clientSecret = Environment.get(.googleClientSecret)!
+        
+        let redirectURI = Environment.get(.googleRedirectBackend)!
     
         let params = [
             "code": percentDecoded,

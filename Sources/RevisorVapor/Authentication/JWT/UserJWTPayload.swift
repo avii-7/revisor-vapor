@@ -6,12 +6,17 @@
 //
 
 import JWT
+import Vapor
+
+extension IssuerClaim {
+    static let revisor = Self(value: "revisor")
+}
 
 struct UserJWTPayload: JWTPayload {
     
-    let issuer = IssuerClaim(value: "revisor")
+    let issuer: IssuerClaim = .revisor
     
-    let expiration = ExpirationClaim(value: .distantFuture)
+    let expiration = ExpirationClaim(value: .now.addingTimeInterval(3600))
     
     let subject: SubjectClaim
     
@@ -23,5 +28,9 @@ struct UserJWTPayload: JWTPayload {
     
     func verify(using algorithm: some JWTAlgorithm) async throws {
         try self .expiration.verifyNotExpired()
+        
+        guard issuer == .revisor else {
+            throw Abort(.unauthorized)
+        }
     }
 }
