@@ -28,6 +28,9 @@ struct RevisionItemMapper {
             userId: userId,
             title: dto.title,
             content: dto.content,
+            platformUrl: dto.platformUrl,
+            keyIntuition: dto.keyIntuition,
+            solutionCode: dto.solutionCode,
             diffilcultyLevel: dto.difficulty
         )
     }

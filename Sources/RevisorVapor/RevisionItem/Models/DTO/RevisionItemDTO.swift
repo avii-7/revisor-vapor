@@ -18,7 +18,7 @@ struct RevisionItemResponseDTO: Content {
     
     let streak: Int
     
-    let content: String
+    let content: String?
     
     let revisionCount: Int
     
@@ -29,9 +29,22 @@ struct RevisionItemCreateRequestDTO: Content {
     
     let title: String
     
-    let content: String
+    let content: String?
     
     let difficulty: DifficultyLevel
+    
+    let platformUrl: String?
+    
+    let keyIntuition: String?
+    
+    let solutionCode: String?
+    
+    enum CodingKeys: String, CodingKey {
+        case title, content, difficulty
+        case platformUrl = "platform_url"
+        case keyIntuition = "key_intuition"
+        case solutionCode = "solution_code"
+    }
 }
 
 struct RevisionItemPatchRequestDTO: Decodable {
