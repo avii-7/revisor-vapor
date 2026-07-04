@@ -8,21 +8,36 @@
 import Foundation
 import Vapor
 
+struct NextRevision: Content {
+    
+    let easy: Date
+    
+    let good: Date
+    
+    let hard: Date
+    
+    let again: Date
+}
+
 struct RevisionItemResponseDTO: Content {
     
     let id: UUID
     
     let title: String
     
-    let subtitle: String
-    
-    let streak: Int
-    
     let content: String?
     
-    let revisionCount: Int
+    let platformUrl: String?
     
-    let difficulty: DifficultyLevel
+    let keyIntuition: String?
+    
+    let solutionCode: String?
+    
+    let nextRevision: NextRevision?
+    
+    let due: Date
+    
+    let lastReview: Date?
 }
 
 struct RevisionItemCreateRequestDTO: Content {
@@ -31,31 +46,24 @@ struct RevisionItemCreateRequestDTO: Content {
     
     let content: String?
     
-    let difficulty: DifficultyLevel
-    
     let platformUrl: String?
     
     let keyIntuition: String?
     
     let solutionCode: String?
-    
-    enum CodingKeys: String, CodingKey {
-        case title, content, difficulty
-        case platformUrl = "platform_url"
-        case keyIntuition = "key_intuition"
-        case solutionCode = "solution_code"
-    }
 }
 
 struct RevisionItemPatchRequestDTO: Decodable {
     
     let id: UUID
     
-    let title: String?
+    let title: String
     
     let content: String?
     
-    let revisionCount: Int?
+    let platformUrl: String?
     
-    let difficulty: DifficultyLevel? // TODO: - Try to update with enum
+    let keyIntuition: String?
+    
+    let solutionCode: String?
 }

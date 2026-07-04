@@ -42,7 +42,8 @@ struct UserPostgresRepository: UserRepository {
     func add(_ userDTO: GoogleUserDTO) async throws -> User {
         if let user = try await getUser(by: userDTO.email) {
             return try await update(userDTO, with: user.id!)
-        } else {
+        }
+        else {
             return try await create(userDTO)
         }
     }
@@ -59,7 +60,7 @@ struct UserPostgresRepository: UserRepository {
                 expiresIn: userDTO.token.expiresIn
             ),
             settings: UserSettings(
-                retentionRate: 0.9
+                retentionRate: FSRSConfigs.defaultRetention
             )
         )
         try await user.create(on: db)

@@ -30,11 +30,11 @@ final class User: Model, @unchecked Sendable {
     @Group(key: "settings")
     var settings: UserSettings
     
-    @Timestamp(key: "created_at", on: .create)
-    var createdAt: Date?
-    
     @Group(key: "token")
     var token: GoogleToken
+    
+    @Timestamp(key: "created_at", on: .create)
+    var createdAt: Date?
     
     @Timestamp(key: "updated_at", on: .update)
     var updatedAt: Date?

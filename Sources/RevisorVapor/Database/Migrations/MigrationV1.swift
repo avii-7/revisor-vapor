@@ -29,7 +29,7 @@ struct MigrationV1: AsyncMigration {
             .id()
             .field("user_id", .uuid)
             .field("title", .string, .required)
-            .field("isPredefined", .bool, .required)
+            .field("is_predefined", .bool, .required)
             .foreignKey("user_id", references: User.schema, "id")
             .create()
         
@@ -37,7 +37,7 @@ struct MigrationV1: AsyncMigration {
             .id()
             .field("user_id", .uuid)
             .field("title", .string, .required)
-            .field("isPredefined", .bool, .required)
+            .field("is_predefined", .bool, .required)
             .foreignKey("user_id", references: User.schema, "id")
             .create()
         
@@ -49,34 +49,42 @@ struct MigrationV1: AsyncMigration {
             .field("platform_url", .string)
             .field("key_intuition", .string)
             .field("solution_code", .string)
-            .field("revision_count", .int, .required)
-            .field("streak", .int, .required)
-            .field("category_ids", .array(of: .uuid))
+        
+            .field("memory_state_due", .datetime, .required)
+            .field("memory_state_stability", .double, .required)
+            .field("memory_state_difficulty", .double, .required)
+            .field("memory_state_reps", .int, .required)
+            .field("memory_state_lapses", .int, .required)
+        
+            .field("memory_state_last_review", .datetime)
+        
             .field("tags_ids", .array(of: .uuid))
             .field("created_at", .datetime)
             .field("updated_at", .datetime)
             .foreignKey("user_id", references: User.schema, "id")
             .create()
         
-        let difficultyLevel = try await database.enum(DifficultyLevel.name)
-            .case(DifficultyLevel.default.rawValue)
-            .case(DifficultyLevel.easy.rawValue)
-            .case(DifficultyLevel.medium.rawValue)
-            .case(DifficultyLevel.hard.rawValue)
+        let cardStateType = try await database.enum(RevisionCardState.name)
+            .case(RevisionCardState.new.rawValue)
+            .case(RevisionCardState.learning.rawValue)
+            .case(RevisionCardState.review.rawValue)
+            .case(RevisionCardState.relearning.rawValue)
             .create()
         
         try await database.schema(RevisionItem.schema)
-            .field(.init(stringLiteral: DifficultyLevel.name), difficultyLevel, .required)
+            .field("memory_state_state", cardStateType, .required)
             .update()
     }
     
     func revert(on database: any Database) async throws {
         
         try await database.schema(RevisionItemCategory.schema).delete()
+        
         try await database.schema(RevisionItemTag.schema).delete()
 
         try await database.schema(RevisionItem.schema).delete()
-        try await database.enum(DifficultyLevel.name).delete()
+        
+        try await database.enum(RevisionCardState.name).delete()
         
         try await database.schema(User.schema).delete()
     }

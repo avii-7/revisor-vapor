@@ -1,16 +1,18 @@
 //
-//  RevisionItemController.swift
+//  RevisionController.swift
 //  RevisorVapor
 //
 //  Created by Avii 🔥 on 28/08/25.
 //
 
 import Vapor
+import FSRS
 
-extension RevisionItemController {
+private extension RevisionController {
     
     enum Endpoint: String {
-        case reviseItems = "revision-items"
+        case revisionItems = "revision-items"
+        case revisionItemsDue = "revision-items/due"
     }
     
     enum Parameter: String {
@@ -22,32 +24,52 @@ extension RevisionItemController {
     }
 }
 
-final class RevisionItemController: RouteCollection, Sendable {
+final class RevisionController: RouteCollection, Sendable {
     
-    private let repository: any RevisionItemRepository
+    private let service: RevisionService
     
-    init(repository: any RevisionItemRepository) {
-        self.repository = repository
+    init(service: RevisionService) {
+        self.service = service
     }
     
     func boot(routes: any RoutesBuilder) throws {
         
-        let endpoint = PathComponent(stringLiteral: Endpoint.reviseItems.rawValue)
-        let itemId = Parameter.itemId.pathComponent
+        let dueEndpoint = PathComponent.constant("revision-items/due")
+        routes.get(dueEndpoint, use: dueRevisionItems)
         
-        routes.get(endpoint, use: getAllItems)
-        routes.post(endpoint, use: createItem)
-        routes.patch(endpoint, use: updateItem)
-        routes.delete(endpoint, itemId, use: deleteItem)
+        let crudEndpoint = PathComponent.constant("revision-items")
+
+        routes.get(crudEndpoint, use: allItems)
+        routes.post(crudEndpoint, use: createItem)
+        routes.patch(crudEndpoint, use: updateItem)
+        
+        let itemID = PathComponent.parameter(ParameterConstants.itemID)
+        routes.delete(crudEndpoint, itemID, use: deleteItem)
     }
     
-    private func getAllItems(_ req: Request) async throws -> Response {
+    private func dueRevisionItems(_ req: Request) async throws -> Response {
+        let userAuthenticable = try req.auth.require(UserAuthenticatable.self)
+        let userId = userAuthenticable.userId
+        
+        do {
+            let items = try await service.dueRevisionItems(for: userId)
+            let response = Response()
+            try response.content.encode(items)
+            return response
+        }
+        catch {
+            print(error)
+            return Response(status: .internalServerError)
+        }
+    }
+    
+    private func allItems(_ req: Request) async throws -> Response {
         
         let userAuthenticable = try req.auth.require(UserAuthenticatable.self)
         let userId = userAuthenticable.userId
         
         do {
-            let items: [RevisionItemResponseDTO] = try await repository.getAll(for: userId)
+            let items: [RevisionItemResponseDTO] = try await service.revisionItems(for: userId)
             let response = Response()
             try response.content.encode(items)
             return response
@@ -63,22 +85,22 @@ final class RevisionItemController: RouteCollection, Sendable {
         let userId = userAuthenticable.userId
         
         let itemDTO = try req.content.decode(RevisionItemCreateRequestDTO.self)
-
-        let item = try await repository.create(itemDTO, for: userId)
+        let createdItem = try await service.create(itemDTO, userID: userId)
+        
         let response = Response(status: .created)
-        try response.content.encode(item)
+        try response.content.encode(createdItem)
         return response
     }
     
     private func updateItem(_ req: Request) async throws -> Response {
         let userAuthenticable = try req.auth.require(UserAuthenticatable.self)
-        let userId = userAuthenticable.userId
+        let userID = userAuthenticable.userId
         
         let itemDTO = try req.content.decode(RevisionItemPatchRequestDTO.self)
-        
-        try await repository.update(itemDTO, for: userId)
-        
+        let updateItemDTO = try await service.update(item: itemDTO, userID: userID)
+
         let response = Response()
+        try response.content.encode(updateItemDTO)
         return response
     }
     
@@ -87,11 +109,12 @@ final class RevisionItemController: RouteCollection, Sendable {
         let userId = userAuthenticable.userId
         
         let itemIdString = try req.parameters.require(Parameter.itemId.rawValue)
+        
         guard let itemId = UUID(uuidString: itemIdString) else {
             throw Abort(.badRequest)
         }
         
-        try await repository.delete(itemId: itemId, for: userId)
+        try await service.delete(itemID: itemId, userID: userId)
         
         let response = Response()
         return response
