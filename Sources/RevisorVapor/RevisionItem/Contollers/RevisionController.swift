@@ -8,22 +8,6 @@
 import Vapor
 import FSRS
 
-private extension RevisionController {
-    
-    enum Endpoint: String {
-        case revisionItems = "revision-items"
-        case revisionItemsDue = "revision-items/due"
-    }
-    
-    enum Parameter: String {
-        case itemId
-        
-        var pathComponent: PathComponent {
-            PathComponent(stringLiteral: ":\(self.rawValue)")
-        }
-    }
-}
-
 final class RevisionController: RouteCollection, Sendable {
     
     private let service: RevisionService
@@ -33,18 +17,16 @@ final class RevisionController: RouteCollection, Sendable {
     }
     
     func boot(routes: any RoutesBuilder) throws {
+        let group = routes.grouped(["revision-items"])
         
-        let dueEndpoint = PathComponent.constant("revision-items/due")
-        routes.get(dueEndpoint, use: dueRevisionItems)
-        
-        let crudEndpoint = PathComponent.constant("revision-items")
-
-        routes.get(crudEndpoint, use: allItems)
-        routes.post(crudEndpoint, use: createItem)
-        routes.patch(crudEndpoint, use: updateItem)
+        group.get(use: allItems)
+        group.post(use: createItem)
+        group.patch(use: updateItem)
         
         let itemID = PathComponent.parameter(ParameterConstants.itemID)
-        routes.delete(crudEndpoint, itemID, use: deleteItem)
+        group.delete(itemID, use: deleteItem)
+        
+        group.get("due", use: dueRevisionItems)
     }
     
     private func dueRevisionItems(_ req: Request) async throws -> Response {
@@ -108,7 +90,7 @@ final class RevisionController: RouteCollection, Sendable {
         let userAuthenticable = try req.auth.require(UserAuthenticatable.self)
         let userId = userAuthenticable.userId
         
-        let itemIdString = try req.parameters.require(Parameter.itemId.rawValue)
+        let itemIdString = try req.parameters.require(ParameterConstants.itemID)
         
         guard let itemId = UUID(uuidString: itemIdString) else {
             throw Abort(.badRequest)
