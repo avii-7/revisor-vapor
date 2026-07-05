@@ -43,7 +43,15 @@ final class MemoryState: Fields, @unchecked Sendable {
     @Field(key: "last_review")
     var lastReview: Date?
     
-    init() { }
+    init() {
+        self.due = .now
+        self.stability = .zero
+        self.difficulty = .zero
+        self.reps = .zero
+        self.lapses = .zero
+        self.state = .new
+        self.lastReview = nil
+    }
     
     init(
         due: Date = .now,

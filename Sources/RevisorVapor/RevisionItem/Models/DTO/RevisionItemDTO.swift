@@ -67,3 +67,7 @@ struct RevisionItemPatchRequestDTO: Decodable {
     
     let solutionCode: String?
 }
+
+struct RevisionItemSubmitRatingDTO: Content {
+    let rating: InputRating
+}

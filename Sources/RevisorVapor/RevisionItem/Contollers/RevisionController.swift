@@ -18,15 +18,16 @@ final class RevisionController: RouteCollection, Sendable {
     
     func boot(routes: any RoutesBuilder) throws {
         let group = routes.grouped(["revision-items"])
+        let itemID = PathComponent.parameter(ParameterConstants.id)
         
         group.get(use: allItems)
         group.post(use: createItem)
+        group.post(use: createItem)
         group.patch(use: updateItem)
-        
-        let itemID = PathComponent.parameter(ParameterConstants.itemID)
         group.delete(itemID, use: deleteItem)
         
         group.get("due", use: dueRevisionItems)
+        group.post(itemID, "review", use: submitReview)
     }
     
     private func dueRevisionItems(_ req: Request) async throws -> Response {
@@ -43,6 +44,24 @@ final class RevisionController: RouteCollection, Sendable {
             print(error)
             return Response(status: .internalServerError)
         }
+    }
+    
+    private func submitReview(_ req: Request) async throws -> Response {
+        let userAuthenticable = try req.auth.require(UserAuthenticatable.self)
+        let userId = userAuthenticable.userId
+        
+        let itemIdString = try req.parameters.require(ParameterConstants.id)
+        
+        guard let itemID = UUID(uuidString: itemIdString) else {
+            throw Abort(.badRequest)
+        }
+        
+        let dto = try req.content.decode(RevisionItemSubmitRatingDTO.self)
+
+        try await service.review(itemID: itemID, rating: dto.rating, userID: userId)
+        
+        let response = Response()
+        return response
     }
     
     private func allItems(_ req: Request) async throws -> Response {
@@ -90,7 +109,7 @@ final class RevisionController: RouteCollection, Sendable {
         let userAuthenticable = try req.auth.require(UserAuthenticatable.self)
         let userId = userAuthenticable.userId
         
-        let itemIdString = try req.parameters.require(ParameterConstants.itemID)
+        let itemIdString = try req.parameters.require(ParameterConstants.id)
         
         guard let itemId = UUID(uuidString: itemIdString) else {
             throw Abort(.badRequest)

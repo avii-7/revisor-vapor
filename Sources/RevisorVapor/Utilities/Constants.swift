@@ -18,5 +18,6 @@ enum TimeConstants {
 }
 
 enum ParameterConstants {
-    static let itemID = "itemID"
+    static let id = "id"
+    static let rating = "Rating"
 }

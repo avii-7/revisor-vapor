@@ -147,7 +147,7 @@ final class RevisionService: Sendable {
         return dto
     }
     
-    func update(rating: InputRating, for itemID: UUID, userID: UUID) async throws {
+    func review(itemID: UUID, rating: InputRating, userID: UUID) async throws {
         let dbItem = try await repository.get(itemID: itemID, for: userID)
         
         guard let dbItem else {
