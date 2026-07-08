@@ -6,6 +6,7 @@
 //
 
 import Foundation
+import FluentKit
 
 struct RevisionMapper {
     
@@ -45,5 +46,9 @@ struct RevisionMapper {
             keyIntuition: dto.keyIntuition,
             solutionCode: dto.solutionCode
         )
+    }
+    
+    static func map(_ dbModel: Page<RevisionItem>) -> PaginatedDTO<RevisionItemResponseDTO> {
+        PaginationMapper.map(dbModel) { Self.map($0, nextRevision: nil) }
     }
 }

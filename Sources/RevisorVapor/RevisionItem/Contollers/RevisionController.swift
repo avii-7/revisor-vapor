@@ -21,6 +21,8 @@ final class RevisionController: RouteCollection, Sendable {
         let itemID = PathComponent.parameter(ParameterConstants.id)
         
         group.get(use: allItems)
+        group.get(itemID, use: item)
+        group.get("preview", use: previewItems)
         group.post(use: createItem)
         group.post(use: createItem)
         group.patch(use: updateItem)
@@ -69,8 +71,27 @@ final class RevisionController: RouteCollection, Sendable {
         let userAuthenticable = try req.auth.require(UserAuthenticatable.self)
         let userId = userAuthenticable.userId
         
+        let pageDTO = try req.content.decode(PageRequestDTO.self)
+        
         do {
-            let items: [RevisionItemResponseDTO] = try await service.revisionItems(for: userId)
+            let paginated = try await service.revisionItems(for: userId, paginationRequest: pageDTO)
+            let response = Response()
+            try response.content.encode(paginated)
+            return response
+        }
+        catch {
+            print(error)
+            return Response(status: .internalServerError)
+        }
+    }
+    
+    private func previewItems(_ req: Request) async throws -> Response {
+        
+        let userAuthenticable = try req.auth.require(UserAuthenticatable.self)
+        let userId = userAuthenticable.userId
+        
+        do {
+            let items: [RevisionItemResponseDTO] = try await service.previewRevisionItems(for: userId)
             let response = Response()
             try response.content.encode(items)
             return response
@@ -90,6 +111,25 @@ final class RevisionController: RouteCollection, Sendable {
         
         let response = Response(status: .created)
         try response.content.encode(createdItem)
+        return response
+    }
+    
+    private func item(_ req: Request) async throws -> Response {
+        let userAuthenticable = try req.auth.require(UserAuthenticatable.self)
+        let userId = userAuthenticable.userId
+        
+        let itemIdString = try req.parameters.require(ParameterConstants.id)
+        
+        guard let itemId = UUID(uuidString: itemIdString) else {
+            throw Abort(.badRequest)
+        }
+        
+        guard let item = try await service.item(for: userId, itemID: itemId) else {
+            throw Abort(.notFound)
+        }
+        
+        let response = Response()
+        try response.content.encode(item)
         return response
     }
     

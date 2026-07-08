@@ -7,6 +7,7 @@
 
 import Foundation
 import FSRS
+import FluentKit
 
 enum RevisionServiceError: LocalizedError {
     case itemNotFound(_ id: UUID, _ userID: UUID)
@@ -122,10 +123,36 @@ final class RevisionService: Sendable {
         }
     }
     
-    func revisionItems(for userId: UUID) async throws -> [RevisionItemResponseDTO] {
+    func previewRevisionItems(for userId: UUID) async throws -> [RevisionItemResponseDTO] {
         do {
-            let dbItems = try await repository.revisionItems(for: userId)
+            let dbItems = try await repository.previewRevisionItems(for: userId)
             return dbItems.map { RevisionMapper.map($0, nextRevision: nil) }
+        }
+        catch {
+            print(error)
+            throw error
+        }
+    }
+    
+    func revisionItems(for userId: UUID, paginationRequest: PageRequestDTO) async throws -> PaginatedDTO<RevisionItemResponseDTO> {
+        do {
+            let request = PageRequest(page: paginationRequest.page, per: paginationRequest.size)
+            let dbModel = try await repository.revisionItems(for: userId, request: request)
+            return RevisionMapper.map(dbModel)
+        }
+        catch {
+            print(error)
+            throw error
+        }
+    }
+    
+    func item(for userId: UUID, itemID: UUID) async throws -> RevisionItemResponseDTO? {
+        do {
+            if let dbItem = try await repository.get(itemID: itemID, for: userId) {
+                return RevisionMapper.map(dbItem, nextRevision: nil)
+            }
+            
+            return nil
         }
         catch {
             print(error)

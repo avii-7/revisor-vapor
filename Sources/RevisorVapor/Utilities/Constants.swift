@@ -8,12 +8,16 @@
 import Foundation
 
 enum FSRSConfigs {
-    
     static let defaultRetention = 0.9
 }
 
+enum DBConstants {
+    static let revisionItemsPreviewCount = 5
+    static let defaultPage = 1
+    static let defaultPageSize = 10
+}
+
 enum TimeConstants {
-    
     static let secondsPerDay: TimeInterval = 86_400
 }
 

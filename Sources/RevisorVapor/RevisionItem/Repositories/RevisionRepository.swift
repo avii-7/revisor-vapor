@@ -20,7 +20,9 @@ protocol RevisionRepository: Sendable {
     
     func dueRevisionItems(for userID: UUID) async throws -> [RevisionItem]
     
-    func revisionItems(for userID: UUID) async throws -> [RevisionItem]
+    func previewRevisionItems(for userID: UUID) async throws -> [RevisionItem]
+    
+    func revisionItems(for userID: UUID, request: PageRequest) async throws -> Page<RevisionItem>
     
     func get(itemID: UUID, for userId: UUID) async throws -> RevisionItem?
     
@@ -85,12 +87,21 @@ struct RevisionPostgresRepository: RevisionRepository {
         return items
     }
     
-    func revisionItems(for userID: UUID) async throws -> [RevisionItem] {
+    func previewRevisionItems(for userID: UUID) async throws -> [RevisionItem] {
         let items = try await query(for: userID)
             .sort(\.$updatedAt, .descending)
+            .limit(DBConstants.revisionItemsPreviewCount)
             .all()
         
         return items
+    }
+    
+    func revisionItems(for userID: UUID, request: PageRequest) async throws -> Page<RevisionItem> {
+        let result = try await query(for: userID)
+            .sort(\.$updatedAt, .descending)
+            .paginate(request)
+            
+        return result
     }
     
     func get(itemID: UUID, for userId: UUID) async throws -> RevisionItem? {
