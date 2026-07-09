@@ -89,7 +89,12 @@ struct GoogleAuthController: RouteCollection, Sendable {
             return Response(status: .internalServerError)
         }
 
-        let payload = UserJWTPayload(subject: SubjectClaim(value: userID.uuidString))
+        let payload = UserJWTPayload(
+            issuer: .revisor,
+            subject: SubjectClaim(value: userID.uuidString),
+            expiration: .expireClaim
+        )
+        
         let jwtToken = try await req.jwt.sign(payload)
         
         var clientRedirectURI = Environment.get(.googleRedirectFrontend)!

@@ -8,17 +8,13 @@
 import JWT
 import Vapor
 
-extension IssuerClaim {
-    static let revisor = Self(value: "revisor")
-}
-
 struct UserJWTPayload: JWTPayload {
     
-    let issuer: IssuerClaim = .revisor
-    
-    let expiration = ExpirationClaim(value: .now.addingTimeInterval(3600))
+    let issuer: IssuerClaim
     
     let subject: SubjectClaim
+    
+    let expiration: ExpirationClaim
     
     enum CodingKeys: String, CodingKey {
         case issuer = "iss"
@@ -33,4 +29,13 @@ struct UserJWTPayload: JWTPayload {
             throw Abort(.unauthorized)
         }
     }
+}
+
+extension ExpirationClaim {
+    
+    static var expireClaim: Self { Self(value: .now.addingTimeInterval(3600)) }
+}
+
+extension IssuerClaim {
+    static let revisor = Self(value: "revisor")
 }
