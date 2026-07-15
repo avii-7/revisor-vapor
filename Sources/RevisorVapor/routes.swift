@@ -12,7 +12,7 @@ func routes(_ app: Application) throws {
     let repository = RevisionPostgresRepository(db: app.db)
     let service = RevisionService(repository: repository, userRepository: userRepsitory)
     
-    try group.register(collection: GoogleAuthController(userRepository: userRepsitory))
+    try group.register(collection: AuthController(userRepository: userRepsitory))
     
     let protectedGroup = group.grouped(UserAuthenticator())
         .grouped(UserAuthenticatable.guardMiddleware())

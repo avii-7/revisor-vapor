@@ -9,24 +9,11 @@ import Foundation
 import Vapor
 
 struct UserDTO {
-    let id: UUID
+    let googleId: String
     let firstName: String
     let lastName: String
     let email: String
     let profilePicture: String?
-    let token: GoogleTokenDTO
-}
-
-struct GoogleUserDTO {
-    let firstName: String
-    let lastName: String
-    let email: String
-    let profilePicture: String?
-    let token: GoogleTokenDTO
-}
-
-struct GoogleTokenDTO {
-    let accessToken: String
-    let refreshToken: String
-    let expiresIn: Int
+    let tokenHash: String
+    let expiresIn: Date
 }

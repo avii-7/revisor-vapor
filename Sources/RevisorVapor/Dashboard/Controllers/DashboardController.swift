@@ -83,7 +83,7 @@ struct DashboardController: RouteCollection, Sendable {
     }
     
     private func getProfileDTO(using userId: UUID) async throws -> ProfileDTO {
-        guard let user = try await userRepository.get(by: userId) else {
+        guard let user = try await userRepository.user(id: userId) else {
             throw Abort(.notFound)
         }
         

@@ -61,7 +61,7 @@ struct ProfileController: RouteCollection, Sendable {
         
         let userId = userAuthenticable.userId
         
-        guard let user = try await userRepository.get(by: userId) else {
+        guard let user = try await userRepository.user(id: userId) else {
             throw Abort(.notFound)
         }
         

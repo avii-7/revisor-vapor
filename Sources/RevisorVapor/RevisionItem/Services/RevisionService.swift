@@ -199,8 +199,8 @@ final class RevisionService: Sendable {
 // MARK: - Private
 extension RevisionService {
     
-    private func getRetentionRate(using user: UUID) async throws -> Double? {
-        try await userRepository.get(by: user)?.settings.retentionRate
+    private func getRetentionRate(using userId: UUID) async throws -> Double? {
+        try await userRepository.user(id: userId)?.settings.retentionRate
     }
 }
 

@@ -15,6 +15,9 @@ final class User: Model, @unchecked Sendable {
     @ID
     var id: UUID?
     
+    @Field(key: "google_id")
+    var googleId: String
+    
     @Field(key: "first_name")
     var firstName: String
     
@@ -31,7 +34,7 @@ final class User: Model, @unchecked Sendable {
     var settings: UserSettings
     
     @Group(key: "token")
-    var token: GoogleToken
+    var token: Token
     
     @Timestamp(key: "created_at", on: .create)
     var createdAt: Date?
@@ -41,7 +44,8 @@ final class User: Model, @unchecked Sendable {
 
     init() { }
     
-    init(firstName: String, lastName: String, email: String, profilePicture: String? = nil, token: GoogleToken, settings: UserSettings) {
+    init(googleId: String, firstName: String, lastName: String, email: String, profilePicture: String? = nil, token: Token, settings: UserSettings) {
+        self.googleId = googleId
         self.firstName = firstName
         self.lastName = lastName
         self.email = email

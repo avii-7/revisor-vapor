@@ -8,7 +8,7 @@
 import FluentKit
 import Vapor
 
-struct PageRequestDTO: Content {
+struct PageRequestDTO: Decodable {
     
     let page: Int
     

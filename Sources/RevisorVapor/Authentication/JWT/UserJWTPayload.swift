@@ -26,14 +26,14 @@ struct UserJWTPayload: JWTPayload {
         try self .expiration.verifyNotExpired()
         
         guard issuer == .revisor else {
-            throw Abort(.unauthorized)
+            throw JWTError.claimVerificationFailure(failedClaim: issuer, reason: "Failed issuer claim")
         }
     }
 }
 
 extension ExpirationClaim {
     
-    static var expireClaim: Self { Self(value: .now.addingTimeInterval(3600)) }
+    static var oneHour: Self { Self(value: .now.addingTimeInterval(3600)) }
 }
 
 extension IssuerClaim {

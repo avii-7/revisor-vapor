@@ -11,11 +11,17 @@ import Foundation
 protocol UserRepository: Sendable {
     
     @discardableResult
-    func add(_ userDTO: GoogleUserDTO) async throws -> User
+    func createOrUpdate(_ userDTO: UserDTO) async throws -> User
     
-    func get(by id: UUID) async throws -> User?
+    func user(id: UUID) async throws -> User?
     
-    func update(_ userDTO: GoogleUserDTO, with id: UUID) async throws -> User
+    func user(hash: String) async throws -> User?
+    
+    func user(googleId: String) async throws -> User?
+    
+    func update(_ userDTO: UserDTO, with id: UUID) async throws -> User
+    
+    func update(user: User) async throws
 }
 
 struct UserPostgresRepository: UserRepository {
@@ -29,18 +35,28 @@ struct UserPostgresRepository: UserRepository {
     private func query() -> QueryBuilder<User> {
         db.query(User.self)
     }
+   
+    func user(id: UUID) async throws -> User? {
+        try await query().filter(\.$id == id).first()
+    }
     
-    private func getUser(by email: String) async throws -> User? {
+    func user(googleId: String) async throws -> User? {
+        let user = try await query().filter(\.$googleId == googleId).first()
+        return user
+    }
+    
+    func user(hash: String) async throws -> User? {
+        let user = try await query().filter(\.token.$tokenHash == hash).first()
+        return user
+    }
+    
+    private func user(email: String) async throws -> User? {
         let user = try await query().filter(\.$email == email).first()
         return user
     }
     
-    func get(by id: UUID) async throws -> User? {
-        try await query().filter(\.$id == id).first()
-    }
-    
-    func add(_ userDTO: GoogleUserDTO) async throws -> User {
-        if let user = try await getUser(by: userDTO.email) {
+    func createOrUpdate(_ userDTO: UserDTO) async throws -> User {
+        if let user = try await user(googleId: userDTO.googleId) {
             return try await update(userDTO, with: user.id!)
         }
         else {
@@ -48,16 +64,16 @@ struct UserPostgresRepository: UserRepository {
         }
     }
     
-    private func create(_ userDTO: GoogleUserDTO) async throws -> User {
+    private func create(_ userDTO: UserDTO) async throws -> User {
         let user = User(
+            googleId: userDTO.googleId,
             firstName: userDTO.firstName,
             lastName: userDTO.lastName,
             email: userDTO.email,
             profilePicture: userDTO.profilePicture,
-            token: GoogleToken(
-                accessToken: userDTO.token.accessToken,
-                refreshToken: userDTO.token.refreshToken,
-                expiresIn: userDTO.token.expiresIn
+            token: Token(
+                tokenHash: userDTO.tokenHash,
+                expiresIn: userDTO.expiresIn
             ),
             settings: UserSettings(
                 retentionRate: FSRSConfigs.defaultRetention
@@ -67,23 +83,26 @@ struct UserPostgresRepository: UserRepository {
         return user
     }
     
-    func update(_ userDTO: GoogleUserDTO, with id: UUID) async throws -> User {
+    func update(_ userDTO: UserDTO, with id: UUID) async throws -> User {
         if let user = try await query().filter(\.$id == id).first() {
             user.firstName = userDTO.firstName
             user.lastName = userDTO.lastName
             user.profilePicture = userDTO.profilePicture
             user.email = userDTO.email
-
-            user.token = GoogleToken(
-                accessToken: userDTO.token.accessToken,
-                refreshToken: userDTO.token.refreshToken,
-                expiresIn: userDTO.token.expiresIn
+            user.token = Token(
+                tokenHash: userDTO.tokenHash,
+                expiresIn: userDTO.expiresIn
             )
-
+            
             try await user.update(on: db)
             return user
-        } else {
+        }
+        else {
             throw FluentError.noResults
         }
+    }
+    
+    func update(user: User) async throws {
+        try await user.update(on: db)
     }
 }

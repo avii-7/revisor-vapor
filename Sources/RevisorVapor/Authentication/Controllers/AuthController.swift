@@ -1,5 +1,5 @@
 //
-//  GoogleAuthController.swift
+//  AuthController.swift
 //  RevisorVapor
 //
 //  Created by Arun's Macbook on 18/08/25.
@@ -8,7 +8,7 @@
 import Vapor
 import JWTKit
 
-extension GoogleAuthController {
+extension AuthController {
     
     enum Endpoint: String {
         case authUrl = "https://accounts.google.com/o/oauth2/v2/auth"
@@ -17,7 +17,7 @@ extension GoogleAuthController {
     }
 }
 
-struct GoogleAuthController: RouteCollection, Sendable {
+struct AuthController: RouteCollection, Sendable {
     
     let authState = UUID().uuidString
     
@@ -28,9 +28,13 @@ struct GoogleAuthController: RouteCollection, Sendable {
     }
     
     func boot(routes: any RoutesBuilder) throws {
-        let group = routes.grouped(["auth", "google"])
-        group.get(use: getGoogleAuthUrl)
-        group.get("callback", use: authCallback)
+        let authGroup = routes.grouped(["auth"])
+        
+        let googleGroup = authGroup.grouped(["google"])
+        googleGroup.get(use: getGoogleAuthUrl)
+        googleGroup.get("callback", use: authCallback)
+
+        authGroup.post("refresh-token", use: refreshToken)
     }
     
     private func getGoogleAuthUrl(_ req: Request) throws -> Response {
@@ -82,8 +86,13 @@ struct GoogleAuthController: RouteCollection, Sendable {
         let token = try await exchangeAuthorizationCodeForToken(using: code, req.client)
         let googleUser = try await fetchUserInfo(using: token, req.client)
         
-        let newUserRequestDTO = UserMapper.map(googleUser, token: token)
-        let user = try await userRepository.add(newUserRequestDTO)
+        // Refresh Token
+        let refreshToken = Data([UInt8].random(count: 32)).base64EncodedString()
+        let refreshTokenHash = AuthUtils.makeHash(token: refreshToken)
+        let refreshTokenExpiresIn = TimeConstants.ninetyDaysFromNow
+        
+        let newUserRequestDTO = UserMapper.map(googleUser, tokenHash: refreshTokenHash, expiresIn: refreshTokenExpiresIn)
+        let user = try await userRepository.createOrUpdate(newUserRequestDTO)
         
         guard let userID = user.id else {
             return Response(status: .internalServerError)
@@ -92,14 +101,26 @@ struct GoogleAuthController: RouteCollection, Sendable {
         let payload = UserJWTPayload(
             issuer: .revisor,
             subject: SubjectClaim(value: userID.uuidString),
-            expiration: .expireClaim
+            expiration: .oneHour
         )
         
         let jwtToken = try await req.jwt.sign(payload)
         
-        var clientRedirectURI = Environment.get(.googleRedirectFrontend)!
-        clientRedirectURI += "?token=\(jwtToken)"
+        let clientRedirectURI = Environment.get(.googleRedirectFrontend)!
         let response = req.redirect(to: clientRedirectURI)
+        
+        response.cookies[CookiesConstant.jwtToken] = AuthUtils.jwtTokenCookie(
+            token: jwtToken,
+            expire: payload.expiration.value,
+            isSecure: req.application.environment == .production
+        )
+        
+        response.cookies[CookiesConstant.refreshToken] = AuthUtils.refreshTokenCookie(
+            token: refreshToken,
+            expire: refreshTokenExpiresIn,
+            isSecure: req.application.environment == .production
+        )
+
         return response
     }
     
@@ -138,5 +159,60 @@ struct GoogleAuthController: RouteCollection, Sendable {
         let response = try await client.get(URI(string: url), headers: .init([header]))
         let user = try response.content.decode(GoogleUser.self)
         return user
+    }
+    
+    private func refreshToken(_ req: Request) async throws -> Response {
+        
+        let refreshTokenCookie = req.cookies[CookiesConstant.refreshToken]
+        
+        guard let refreshTokenCookie else { throw Abort(.unauthorized) }
+        
+        let refreshToken = refreshTokenCookie.string
+        
+        if refreshToken.isEmpty {
+            throw Abort(.unauthorized)
+        }
+        
+        let hash = AuthUtils.makeHash(token: refreshToken)
+        let user = try await userRepository.user(hash: hash)
+        
+        guard let user else { throw Abort(.unauthorized) }
+        
+        guard user.token.expiresIn > Date.now else { throw Abort(.unauthorized) }
+        
+        let payload = UserJWTPayload(
+            issuer: .revisor,
+            subject: SubjectClaim(value: user.id!.uuidString),
+            expiration: .oneHour
+        )
+        
+        let jwtToken = try await req.jwt.sign(payload)
+        
+        let jwtTokenCookie = AuthUtils.jwtTokenCookie(
+            token: jwtToken,
+            expire: payload.expiration.value,
+            isSecure: req.application.environment == .production
+        )
+        
+        // Refresh Token
+        let newRefreshToken = Data([UInt8].random(count: 32)).base64EncodedString()
+        let newRefreshTokenHash = AuthUtils.makeHash(token: newRefreshToken)
+        let newRefreshTokenExpiresIn = TimeConstants.ninetyDaysFromNow
+        
+        let newRefreshTokenCookie = AuthUtils.refreshTokenCookie(
+            token: newRefreshToken,
+            expire: newRefreshTokenExpiresIn,
+            isSecure: req.application.environment == .production
+        )
+        
+        user.token.tokenHash = newRefreshTokenHash
+        user.token.expiresIn = newRefreshTokenExpiresIn
+        try await userRepository.update(user: user)
+        
+        let response = Response()
+        response.cookies[CookiesConstant.jwtToken] = jwtTokenCookie
+        response.cookies[CookiesConstant.refreshToken] = newRefreshTokenCookie
+        
+        return response
     }
 }
