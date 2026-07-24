@@ -19,7 +19,7 @@ struct MigrationV1: AsyncMigration {
             .field("profile_picture", .string)
             .field("settings_retention_rate", .double, .required)
             .field("token_hash", .string, .required)
-            .field("token_expires_in", .int, .required)
+            .field("token_expires_in", .datetime, .required)
             .field("created_at", .datetime)
             .field("updated_at", .datetime)
             .unique(on: "email")

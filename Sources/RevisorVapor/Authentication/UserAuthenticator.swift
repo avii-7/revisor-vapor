@@ -44,16 +44,4 @@ struct UserAuthenticator: AsyncRequestAuthenticator {
             throw Abort(.unauthorized)
         }
     }
-    
-    func authenticate(bearer: BearerAuthorization, for request: Request) async throws {
-        let payload = try await request.jwt.verify(as: UserJWTPayload.self)
-        let userIdString = payload.subject.value
-        
-        if let userId = UUID(uuidString: userIdString) {
-            request.auth.login(UserAuthenticatable(userId: userId))
-        }
-        else {
-            throw Abort(.unauthorized)
-        }
-    }
 }

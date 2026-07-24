@@ -35,6 +35,7 @@ struct AuthController: RouteCollection, Sendable {
         googleGroup.get("callback", use: authCallback)
 
         authGroup.post("refresh-token", use: refreshToken)
+        authGroup.get("session", use: authSessionStatus)
     }
     
     private func getGoogleAuthUrl(_ req: Request) throws -> Response {
@@ -107,6 +108,7 @@ struct AuthController: RouteCollection, Sendable {
         let jwtToken = try await req.jwt.sign(payload)
         
         let clientRedirectURI = Environment.get(.googleRedirectFrontend)!
+        
         let response = req.redirect(to: clientRedirectURI)
         
         response.cookies[CookiesConstant.jwtToken] = AuthUtils.jwtTokenCookie(
@@ -214,5 +216,15 @@ struct AuthController: RouteCollection, Sendable {
         response.cookies[CookiesConstant.refreshToken] = newRefreshTokenCookie
         
         return response
+    }
+    
+    private func authSessionStatus(_ req: Request) async throws -> Response {
+        let jwtTokenCookie = req.cookies[CookiesConstant.jwtToken]
+        
+        guard let jwtToken = jwtTokenCookie?.string else { throw Abort(.unauthorized) }
+        
+        _ = try await req.jwt.verify(jwtToken, as: UserJWTPayload.self)
+        
+        return Response()
     }
 }

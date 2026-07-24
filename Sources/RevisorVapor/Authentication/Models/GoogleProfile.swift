@@ -15,7 +15,7 @@ struct GoogleUser: Decodable {
     let email: String
     
     enum CodingKeys: String, CodingKey {
-        case id
+        case id = "sub"
         case firstName = "given_name"
         case lastName = "family_name"
         case picture
