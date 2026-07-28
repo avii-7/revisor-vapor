@@ -30,18 +30,21 @@ struct UserAuthenticator: AsyncRequestAuthenticator {
     
     func authenticate(request: Request) async throws {
         
-        guard let jwtToken = request.cookies[CookiesConstant.jwtToken]?.string else {
-            throw Abort(.unauthorized)
+        guard let jwt = request.cookies[CookiesConstant.jwtToken]?.string else {
+            return
         }
         
-        let payload = try await request.jwt.verify(jwtToken, as: UserJWTPayload.self)
-        let userIdString = payload.subject.value
-        
-        if let userId = UUID(uuidString: userIdString) {
-            request.auth.login(UserAuthenticatable(userId: userId))
-        }
-        else {
-            throw Abort(.unauthorized)
+        do {
+            let payload = try await request.jwt.verify(jwt, as: UserJWTPayload.self)
+            
+            guard let userID = UUID(uuidString: payload.subject.value) else {
+                return
+            }
+            
+            request.auth.login(UserAuthenticatable(userId: userID))
+        } catch {
+            // Invalid/expired token -> not authenticated.
+            return
         }
     }
 }

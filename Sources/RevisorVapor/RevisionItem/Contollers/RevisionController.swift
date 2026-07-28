@@ -24,7 +24,6 @@ final class RevisionController: RouteCollection, Sendable {
         group.get(itemID, use: item)
         group.get("preview", use: previewItems)
         group.post(use: createItem)
-        group.post(use: createItem)
         group.patch(use: updateItem)
         group.delete(itemID, use: deleteItem)
         

@@ -36,12 +36,13 @@ public func configure(_ app: Application) async throws {
     let corsConfiguration = CORSMiddleware.Configuration(
         allowedOrigin: .custom(feURI),
         allowedMethods: [.GET, .POST, .PUT, .PATCH, .DELETE],
-        allowedHeaders: [.authorization, .contentType, .accept, .origin, .accessControlAllowOrigin],
+        allowedHeaders: [.authorization, .contentType, .accept, .origin],
         allowCredentials: true
     )
     
     let cors = CORSMiddleware(configuration: corsConfiguration)
-    app.middleware.use(cors)
+    // cors middleware should come before default error middleware using `at: .beginning`
+    app.middleware.use(cors, at: .beginning)
     
     let secretKey = Environment.getJWTSecretKey!
     await app.jwt.keys.add(hmac: .init(from: secretKey), digestAlgorithm: .sha256)

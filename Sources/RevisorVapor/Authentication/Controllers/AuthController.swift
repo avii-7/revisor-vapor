@@ -36,6 +36,7 @@ struct AuthController: RouteCollection, Sendable {
 
         authGroup.post("refresh-token", use: refreshToken)
         authGroup.get("session", use: authSessionStatus)
+        authGroup.get("logout", use: logout)
     }
     
     private func getGoogleAuthUrl(_ req: Request) throws -> Response {
@@ -225,6 +226,16 @@ struct AuthController: RouteCollection, Sendable {
         
         _ = try await req.jwt.verify(jwtToken, as: UserJWTPayload.self)
         
-        return Response()
+        return Response(status: .ok)
+    }
+    
+    private func logout(_ req: Request) async throws -> Response {
+        let jwtTokenCookie = req.cookies[CookiesConstant.jwtToken]
+        
+        guard let jwtToken = jwtTokenCookie?.string else { throw Abort(.unauthorized) }
+        
+        _ = try await req.jwt.verify(jwtToken, as: UserJWTPayload.self)
+        
+        return Response(status: .ok)
     }
 }
