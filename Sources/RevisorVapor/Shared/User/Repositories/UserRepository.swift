@@ -46,7 +46,7 @@ struct UserPostgresRepository: UserRepository {
     }
     
     func user(hash: String) async throws -> User? {
-        let user = try await query().filter(\.token.$tokenHash == hash).first()
+        let user = try await query().filter(\.$token.$tokenHash == hash).first()
         return user
     }
     
