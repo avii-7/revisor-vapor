@@ -69,6 +69,9 @@ struct AuthController: RouteCollection, Sendable {
             return Response(status: .badRequest)
         }
         
+        // TODO: USE query decoder
+        // req.query.decode(Model.self)
+        
         let queryItems: [String: String] = query.split(separator: "&").reduce(into: [:]) { partialResult, item in
             let keyValuePair = item.split(separator: "=")
             guard keyValuePair.count >= 2 else { return }

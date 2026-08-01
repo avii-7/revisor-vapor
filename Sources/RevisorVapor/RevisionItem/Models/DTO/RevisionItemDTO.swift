@@ -8,6 +8,20 @@
 import Foundation
 import Vapor
 
+struct TagDTO: Content {
+    
+    let id: UUID
+    
+    let name: String
+}
+
+struct FolderDTO: Content {
+    
+    let id: UUID
+    
+    let name: String
+}
+
 struct NextRevision: Content {
     
     let easy: Date
@@ -17,6 +31,23 @@ struct NextRevision: Content {
     let hard: Date
     
     let again: Date
+}
+
+struct PreviewRevisionItemResponseDTO: Content {
+    
+    let id: UUID
+    
+    let title: String
+    
+    let subtitle: String?
+    
+    let revisionCount: Int
+    
+    let lastReview: Date?
+    
+    let tags: [TagDTO]?
+    
+    let folder: FolderDTO?
 }
 
 struct RevisionItemResponseDTO: Content {
@@ -37,7 +68,13 @@ struct RevisionItemResponseDTO: Content {
     
     let due: Date
     
+    let totalRevisionCount: Int
+    
     let lastReview: Date?
+    
+    let tags: [TagDTO]?
+    
+    let folder: FolderDTO?
 }
 
 struct RevisionItemCreateRequestDTO: Content {

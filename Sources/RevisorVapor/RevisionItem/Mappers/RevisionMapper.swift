@@ -22,7 +22,22 @@ struct RevisionMapper {
             solutionCode: item.solutionCode,
             nextRevision: nextRevision,
             due: item.memoryState.due,
-            lastReview: item.memoryState.lastReview
+            totalRevisionCount: item.memoryState.reps,
+            lastReview: item.memoryState.lastReview,
+            tags: item.tagIDs?.map { TagDTO(id: $0, name: "Dummy") },
+            folder: nil
+        )
+    }
+    
+    static func map(_ item: RevisionItem) -> PreviewRevisionItemResponseDTO {
+        PreviewRevisionItemResponseDTO(
+            id: item.id!,
+            title: item.title,
+            subtitle: nil,
+            revisionCount: item.memoryState.reps,
+            lastReview: item.memoryState.lastReview,
+            tags: item.tagIDs?.map { TagDTO(id: $0, name: "Dummy") },
+            folder: nil
         )
     }
     
@@ -50,5 +65,9 @@ struct RevisionMapper {
     
     static func map(_ dbModel: Page<RevisionItem>) -> PaginatedDTO<RevisionItemResponseDTO> {
         PaginationMapper.map(dbModel) { Self.map($0, nextRevision: nil) }
+    }
+    
+    static func map(_ dbModel: Page<RevisionItem>) -> PaginatedDTO<PreviewRevisionItemResponseDTO> {
+        PaginationMapper.map(dbModel) { Self.map($0) }
     }
 }

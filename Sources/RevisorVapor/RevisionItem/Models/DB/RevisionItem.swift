@@ -101,7 +101,7 @@ final class RevisionItem: Model, @unchecked Sendable {
     var memoryState: MemoryState
     
     @Field(key: "tags_ids")
-    var tagIDs: [UUID]
+    var tagIDs: [UUID]?
     
     @Timestamp(key: "created_at", on: .create)
     var createdAt: Date?
@@ -119,7 +119,7 @@ final class RevisionItem: Model, @unchecked Sendable {
         keyIntuition: String? = nil,
         solutionCode: String? = nil,
         memoryState: MemoryState = MemoryState(),
-        tagIDs: [UUID] = []
+        tagIDs: [UUID]? = nil
     ) {
         self.userId = userId
         self.title = title

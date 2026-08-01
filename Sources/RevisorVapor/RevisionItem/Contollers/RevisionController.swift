@@ -70,7 +70,7 @@ final class RevisionController: RouteCollection, Sendable {
         let userAuthenticable = try req.auth.require(UserAuthenticatable.self)
         let userId = userAuthenticable.userId
         
-        let pageDTO = try req.content.decode(PageRequestDTO.self)
+        let pageDTO = try req.query.decode(PageRequestDTO.self)
         
         do {
             let paginated = try await service.revisionItems(for: userId, paginationRequest: pageDTO)
