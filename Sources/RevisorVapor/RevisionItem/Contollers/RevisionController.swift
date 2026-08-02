@@ -90,7 +90,7 @@ final class RevisionController: RouteCollection, Sendable {
         let userId = userAuthenticable.userId
         
         do {
-            let items: [RevisionItemResponseDTO] = try await service.previewRevisionItems(for: userId)
+            let items: [PreviewRevisionItemResponseDTO] = try await service.previewRevisionItems(for: userId)
             let response = Response()
             try response.content.encode(items)
             return response

@@ -123,10 +123,10 @@ final class RevisionService: Sendable {
         }
     }
     
-    func previewRevisionItems(for userId: UUID) async throws -> [RevisionItemResponseDTO] {
+    func previewRevisionItems(for userId: UUID) async throws -> [PreviewRevisionItemResponseDTO] {
         do {
             let dbItems = try await repository.previewRevisionItems(for: userId)
-            return dbItems.map { RevisionMapper.map($0, nextRevision: nil) }
+            return dbItems.map { RevisionMapper.map($0) }
         }
         catch {
             print(error)

@@ -22,7 +22,7 @@ struct RevisionMapper {
             solutionCode: item.solutionCode,
             nextRevision: nextRevision,
             due: item.memoryState.due,
-            totalRevisionCount: item.memoryState.reps,
+            revisionCount: item.memoryState.reps,
             lastReview: item.memoryState.lastReview,
             tags: item.tagIDs?.map { TagDTO(id: $0, name: "Dummy") },
             folder: nil

@@ -182,9 +182,9 @@ struct AuthController: RouteCollection, Sendable {
         let hash = AuthUtils.makeHash(token: refreshToken)
         let user = try await userRepository.user(hash: hash)
         
-        guard let user else { throw Abort(.unauthorized) }
+        guard let user, let expiresIn = user.token.expiresIn else { throw Abort(.unauthorized) }
         
-        guard user.token.expiresIn > Date.now else { throw Abort(.unauthorized) }
+        guard expiresIn > Date.now else { throw Abort(.unauthorized) }
         
         let payload = UserJWTPayload(
             issuer: .revisor,
@@ -233,12 +233,28 @@ struct AuthController: RouteCollection, Sendable {
     }
     
     private func logout(_ req: Request) async throws -> Response {
-        let jwtTokenCookie = req.cookies[CookiesConstant.jwtToken]
         
-        guard let jwtToken = jwtTokenCookie?.string else { throw Abort(.unauthorized) }
+        let response = Response(status: .noContent)
+        let isSecure = req.application.environment == .production
         
-        _ = try await req.jwt.verify(jwtToken, as: UserJWTPayload.self)
+        response.cookies[CookiesConstant.jwtToken] = AuthUtils.expiredCookie(isSecure: isSecure)
+        response.cookies[CookiesConstant.refreshToken] = AuthUtils.expiredCookie(isSecure: isSecure)
         
-        return Response(status: .ok)
+        guard let refreshToken = req.cookies[CookiesConstant.refreshToken]?.string, refreshToken.isEmpty == false else {
+            return response
+        }
+        
+        let hash = AuthUtils.makeHash(token: refreshToken)
+        
+        if let user = try await userRepository.user(hash: hash) {
+            user.token.tokenHash = nil
+            user.token.expiresIn = nil
+            try await userRepository.update(user: user)
+        }
+        else {
+            return response
+        }
+        
+        return response
     }
 }

@@ -12,14 +12,14 @@ final class Token: Fields, @unchecked Sendable {
     
     @Field(key: "hash")
     // refresh token for JWT
-    var tokenHash: String
+    var tokenHash: String?
     
     @Field(key: "expires_in")
-    var expiresIn: Date
+    var expiresIn: Date?
     
     init() { }
     
-    init(tokenHash: String, expiresIn: Date) {
+    init(tokenHash: String?, expiresIn: Date?) {
         self.tokenHash = tokenHash
         self.expiresIn = expiresIn
     }

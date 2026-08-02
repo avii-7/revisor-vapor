@@ -68,7 +68,7 @@ struct RevisionItemResponseDTO: Content {
     
     let due: Date
     
-    let totalRevisionCount: Int
+    let revisionCount: Int
     
     let lastReview: Date?
     

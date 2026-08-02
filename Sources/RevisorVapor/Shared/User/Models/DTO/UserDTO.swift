@@ -14,6 +14,6 @@ struct UserDTO {
     let lastName: String
     let email: String
     let profilePicture: String?
-    let tokenHash: String
-    let expiresIn: Date
+    let tokenHash: String?
+    let expiresIn: Date?
 }
