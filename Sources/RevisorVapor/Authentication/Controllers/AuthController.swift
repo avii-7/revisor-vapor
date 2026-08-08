@@ -66,6 +66,9 @@ struct AuthController: RouteCollection, Sendable {
     private func authCallback(_ req: Request) async throws -> Response {
         
         guard let query = req.url.query else {
+            req.logger.warning("Google auth callback missing query", metadata: [
+                "endpoint": "auth.google.callback"
+            ])
             return Response(status: .badRequest)
         }
         
@@ -81,10 +84,16 @@ struct AuthController: RouteCollection, Sendable {
         }
         
         guard queryItems["state"] == authState else {
+            req.logger.warning("Google auth callback state mismatch", metadata: [
+                "endpoint": "auth.google.callback"
+            ])
             return Response(status: .unauthorized)
         }
         
         guard let code = queryItems["code"] else {
+            req.logger.warning("Google auth callback missing authorization code", metadata: [
+                "endpoint": "auth.google.callback"
+            ])
             return Response(status: .badRequest, body: "Missing code")
         }
         
@@ -100,6 +109,9 @@ struct AuthController: RouteCollection, Sendable {
         let user = try await userRepository.createOrUpdate(newUserRequestDTO)
         
         guard let userID = user.id else {
+            req.logger.error("Persisted Google auth user is missing an id", metadata: [
+                "endpoint": "auth.google.callback"
+            ])
             return Response(status: .internalServerError)
         }
 
@@ -126,6 +138,11 @@ struct AuthController: RouteCollection, Sendable {
             expire: refreshTokenExpiresIn,
             isSecure: req.application.environment == .production
         )
+
+        req.logger.info("Google auth session created", metadata: [
+            "endpoint": "auth.google.callback",
+            "user_id": .string(userID.uuidString)
+        ])
 
         return response
     }
@@ -171,20 +188,39 @@ struct AuthController: RouteCollection, Sendable {
         
         let refreshTokenCookie = req.cookies[CookiesConstant.refreshToken]
         
-        guard let refreshTokenCookie else { throw Abort(.unauthorized) }
+        guard let refreshTokenCookie else {
+            req.logger.warning("Refresh token missing", metadata: [
+                "endpoint": "auth.refresh_token"
+            ])
+            throw Abort(.unauthorized)
+        }
         
         let refreshToken = refreshTokenCookie.string
         
         if refreshToken.isEmpty {
+            req.logger.warning("Refresh token empty", metadata: [
+                "endpoint": "auth.refresh_token"
+            ])
             throw Abort(.unauthorized)
         }
         
         let hash = AuthUtils.makeHash(token: refreshToken)
         let user = try await userRepository.user(hash: hash)
         
-        guard let user, let expiresIn = user.token.expiresIn else { throw Abort(.unauthorized) }
+        guard let user, let expiresIn = user.token.expiresIn else {
+            req.logger.warning("Refresh token not found", metadata: [
+                "endpoint": "auth.refresh_token"
+            ])
+            throw Abort(.unauthorized)
+        }
         
-        guard expiresIn > Date.now else { throw Abort(.unauthorized) }
+        guard expiresIn > Date.now else {
+            req.logger.warning("Refresh token expired", metadata: [
+                "endpoint": "auth.refresh_token",
+                "user_id": .string(user.id?.uuidString ?? "unknown")
+            ])
+            throw Abort(.unauthorized)
+        }
         
         let payload = UserJWTPayload(
             issuer: .revisor,
@@ -219,6 +255,11 @@ struct AuthController: RouteCollection, Sendable {
         response.cookies[CookiesConstant.jwtToken] = jwtTokenCookie
         response.cookies[CookiesConstant.refreshToken] = newRefreshTokenCookie
         
+        req.logger.info("Refresh token rotated", metadata: [
+            "endpoint": "auth.refresh_token",
+            "user_id": .string(user.id?.uuidString ?? "unknown")
+        ])
+
         return response
     }
     
@@ -250,6 +291,11 @@ struct AuthController: RouteCollection, Sendable {
             user.token.tokenHash = nil
             user.token.expiresIn = nil
             try await userRepository.update(user: user)
+            
+            req.logger.info("Refresh token invalidated during logout", metadata: [
+                "endpoint": "auth.logout",
+                "user_id": .string(user.id?.uuidString ?? "unknown")
+            ])
         }
         else {
             return response
