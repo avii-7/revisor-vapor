@@ -22,24 +22,29 @@ final class MemoryState: Fields, @unchecked Sendable {
         case relearning
     }
     
+    // The next scheduled review date.
     @Field(key: "due")
     var due: Date
     
+    // How long the memory is expected to last before forgetting. Higher means the interval grows faster.
     @Field(key: "stability")
     var stability: Double
     
     @Field(key: "difficulty")
     var difficulty: Double
     
+    // Total number of reviews completed.
     @Field(key: "reps")
     var reps: Int
     
+    // Number of times the item was forgotten (Again).
     @Field(key: "lapses")
     var lapses: Int
     
     @Enum(key: "state")
     var state: CardState
     
+    // Timestamp of the previous review.
     @Field(key: "last_review")
     var lastReview: Date?
     

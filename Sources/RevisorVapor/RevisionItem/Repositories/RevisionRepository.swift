@@ -18,6 +18,8 @@ protocol RevisionRepository: Sendable {
     
     func dueRevisionItemCount(for userID: UUID) async throws -> Int
     
+    func revisionItemsCount(for userID: UUID) async throws -> Int?
+    
     func dueRevisionItems(for userID: UUID) async throws -> [RevisionItem]
     
     func previewRevisionItems(for userID: UUID) async throws -> [RevisionItem]
@@ -74,6 +76,13 @@ struct RevisionPostgresRepository: RevisionRepository {
         let count = try await query(for: userID)
             .filter(\.$memoryState.$due <= Date.now)
             .count()
+        
+        return count
+    }
+    
+    func revisionItemsCount(for userID: UUID) async throws -> Int? {
+        let count = try await query(for: userID)
+            .sum(\.$memoryState.$reps)
         
         return count
     }

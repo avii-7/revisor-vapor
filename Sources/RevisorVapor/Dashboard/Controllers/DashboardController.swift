@@ -14,14 +14,6 @@ struct RevisionItemPreview: Content {
     let title: String
 }
 
-struct RevisionStat: Content {
-    
-    let id: String
-    
-    let title: String
-    
-    let value: String
-}
 
 enum RevisionState: String, Content {
     case ready
@@ -45,7 +37,7 @@ struct DashboardDTO: Content {
     
     let revisionInfo: RevisionInfo?
     
-    let revisionStats: [RevisionStat]
+    let revisionStats: [RevisionStatDTO]
 }
 
 struct DashboardController: RouteCollection, Sendable {
