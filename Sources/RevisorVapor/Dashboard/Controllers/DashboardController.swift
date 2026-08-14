@@ -7,24 +7,28 @@
 
 import Vapor
 
-struct RevisionStat: Content {
+struct RevisionItemPreview: Content {
     
-    let id: String
+    let id: UUID
     
     let title: String
-    
-    let value: String
+}
+
+
+enum RevisionState: String, Content {
+    case ready
+    case completed
 }
 
 struct RevisionInfo: Content {
     
-    let title: String
+    let state: RevisionState
     
-    let subtitle: String
+    let nextRevisionAt: Date?
     
-    let ctaText: String
+    let nextItem: RevisionItemPreview?
     
-    let topText: String
+    let dueItemCount: Int
 }
 
 struct DashboardDTO: Content {
@@ -33,43 +37,35 @@ struct DashboardDTO: Content {
     
     let revisionInfo: RevisionInfo?
     
-    let revisionStats: [RevisionStat]
+    let revisionStats: [RevisionStatDTO]
 }
 
 struct DashboardController: RouteCollection, Sendable {
     
+    private let revisionService: RevisionService
+    
     private let userRepository: any UserRepository
     
-    init(userRepository: any UserRepository) {
+    init(revisionService: RevisionService, userRepository: any UserRepository) {
+        self.revisionService = revisionService
         self.userRepository = userRepository
     }
     
     func boot(routes: any RoutesBuilder) throws {
-        routes.get("dashboard", use: getDashboard)
+        routes.get("dashboard", use: dashboard)
     }
     
-    private func getDashboard(_ req: Request) async throws -> Response {
+    private func dashboard(_ req: Request) async throws -> Response {
         
         let userAuthenticable = try req.auth.require(UserAuthenticatable.self)
         
-        let userId = userAuthenticable.userId
+        let userID = userAuthenticable.userId
         
-        let profile = try await getProfileDTO(using: userId)
+        let profile = try await getProfileDTO(using: userID)
         
-        // TODO: - needs to get first problem title.
+        let info = try await revisionService.revisionInfo(for: userID)
         
-        let info = RevisionInfo(
-            title: "Median of Two Sorted Array",
-            subtitle: "Scheduled for today. Estimated time: 15 minutes.",
-            ctaText: "Start Revision",
-            topText: "UP Next"
-        )
-        
-        let stats = [
-            RevisionStat(id: "total_problems", title: "Total Problems", value: "342"),
-            RevisionStat(id: "total_revisions", title: "Total Revisions", value: "1208"),
-            RevisionStat(id: "success_rate", title: "Success Rate", value: "94.2%")
-        ]
+        let stats = try await revisionService.revisionStats(for: userID)
         
         let dashboarDTO = DashboardDTO(profile: profile, revisionInfo: info, revisionStats: stats)
 
@@ -79,7 +75,7 @@ struct DashboardController: RouteCollection, Sendable {
     }
     
     private func getProfileDTO(using userId: UUID) async throws -> ProfileDTO {
-        guard let user = try await userRepository.get(by: userId) else {
+        guard let user = try await userRepository.user(id: userId) else {
             throw Abort(.notFound)
         }
         

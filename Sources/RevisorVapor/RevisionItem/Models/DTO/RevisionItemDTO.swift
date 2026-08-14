@@ -8,21 +8,73 @@
 import Foundation
 import Vapor
 
+struct TagDTO: Content {
+    
+    let id: UUID
+    
+    let name: String
+}
+
+struct FolderDTO: Content {
+    
+    let id: UUID
+    
+    let name: String
+}
+
+struct NextRevision: Content {
+    
+    let easy: Date
+    
+    let good: Date
+    
+    let hard: Date
+    
+    let again: Date
+}
+
+struct PreviewRevisionItemResponseDTO: Content {
+    
+    let id: UUID
+    
+    let title: String
+    
+    let subtitle: String?
+    
+    let revisionCount: Int
+    
+    let lastReview: Date?
+    
+    let tags: [TagDTO]?
+    
+    let folder: FolderDTO?
+}
+
 struct RevisionItemResponseDTO: Content {
     
     let id: UUID
     
     let title: String
     
-    let subtitle: String
-    
-    let streak: Int
-    
     let content: String?
+    
+    let platformUrl: String?
+    
+    let keyIntuition: String?
+    
+    let solutionCode: String?
+    
+    let nextRevision: NextRevision?
+    
+    let due: Date
     
     let revisionCount: Int
     
-    let difficulty: DifficultyLevel
+    let lastReview: Date?
+    
+    let tags: [TagDTO]?
+    
+    let folder: FolderDTO?
 }
 
 struct RevisionItemCreateRequestDTO: Content {
@@ -31,31 +83,28 @@ struct RevisionItemCreateRequestDTO: Content {
     
     let content: String?
     
-    let difficulty: DifficultyLevel
-    
     let platformUrl: String?
     
     let keyIntuition: String?
     
     let solutionCode: String?
-    
-    enum CodingKeys: String, CodingKey {
-        case title, content, difficulty
-        case platformUrl = "platform_url"
-        case keyIntuition = "key_intuition"
-        case solutionCode = "solution_code"
-    }
 }
 
 struct RevisionItemPatchRequestDTO: Decodable {
     
     let id: UUID
     
-    let title: String?
+    let title: String
     
     let content: String?
     
-    let revisionCount: Int?
+    let platformUrl: String?
     
-    let difficulty: DifficultyLevel? // TODO: - Try to update with enum
+    let keyIntuition: String?
+    
+    let solutionCode: String?
+}
+
+struct RevisionItemSubmitRatingDTO: Content {
+    let rating: InputRating
 }

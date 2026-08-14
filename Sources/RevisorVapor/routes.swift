@@ -9,16 +9,22 @@ func routes(_ app: Application) throws {
     let group = app.grouped("api")
     
     let userRepsitory =  UserPostgresRepository(db: app.db)
+    let repository = RevisionPostgresRepository(db: app.db)
+    let service = RevisionService(repository: repository, userRepository: userRepsitory)
     
-    try group.register(collection: GoogleAuthController(userRepository: userRepsitory))
+    try group.register(collection: AuthController(userRepository: userRepsitory))
     
     let protectedGroup = group.grouped(UserAuthenticator())
         .grouped(UserAuthenticatable.guardMiddleware())
     
     try protectedGroup.register(collection: ProfileController(userRepository: userRepsitory))
+
+    try protectedGroup.register(collection: RevisionController(service: service))
     
-    let repository = RevisionItemPostgresRepository(db: app.db)
-    try protectedGroup.register(collection: RevisionItemController(repository: repository))
-    
-    try protectedGroup.register(collection: DashboardController(userRepository: userRepsitory))
+    try protectedGroup.register(
+        collection: DashboardController(
+            revisionService: service,
+            userRepository: userRepsitory
+        )
+    )
 }

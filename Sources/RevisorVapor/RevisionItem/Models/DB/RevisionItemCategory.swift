@@ -15,13 +15,13 @@ final class RevisionItemCategory: Model, @unchecked Sendable {
     @ID
     var id: UUID?
     
-    @Field(key: "user_id")
+    @OptionalField(key: "user_id")
     var userId: UUID?
     
     @Field(key: "title")
     var title: String
     
-    @Field(key: "isPredefined")
+    @Field(key: "is_predefined")
     var isPredefined: Bool
     
     init() { }
