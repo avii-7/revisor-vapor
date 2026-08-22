@@ -6,7 +6,6 @@
 //
 
 import Foundation
-import CryptoKit
 import Vapor
 
 enum AuthUtils {
