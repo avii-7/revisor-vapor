@@ -103,6 +103,13 @@ struct RevisionItemPatchRequestDTO: Decodable {
     let keyIntuition: String?
     
     let solutionCode: String?
+    
+    enum CodingKeys: String, CodingKey {
+        case id, title, content
+        case platformUrl = "platform_url"
+        case keyIntuition = "key_intuition"
+        case solutionCode = "solution_code"
+    }
 }
 
 struct RevisionItemSubmitRatingDTO: Content {

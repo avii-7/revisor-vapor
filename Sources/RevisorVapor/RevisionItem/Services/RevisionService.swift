@@ -150,7 +150,6 @@ final class RevisionService: Sendable {
     
     func update(request: RevisionItemPatchRequestDTO, userID: UUID) async throws -> RevisionItemResponseDTO {
         
-        
         guard let dbItem = try await repository.get(itemID: request.id, for: userID) else {
             throw RevisionServiceError.itemNotFound(request.id, userID)
         }
