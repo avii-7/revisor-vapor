@@ -26,20 +26,23 @@ extension RevisionStatDTO {
 }
 
 enum RevisionStat: Identifiable {
-    case totalProblems
+    case totalItems
     case totalRevisions
+    case dueRevisionItems
     
     var id: String {
         switch self {
-        case .totalProblems: "total_problems"
+        case .totalItems: "total_items"
         case .totalRevisions: "total_revisions"
+        case .dueRevisionItems: "due_revision_items"
         }
     }
     
     var title: String {
         switch self {
-        case .totalProblems: "Total Problems"
-        case .totalRevisions: "Total Revisions"
+        case .totalItems: "Total items"
+        case .totalRevisions: "Total revisions"
+        case .dueRevisionItems: "Due Revision Items"
         }
     }
 }

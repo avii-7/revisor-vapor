@@ -67,15 +67,16 @@ final class RevisionService: Sendable {
     
     func revisionStats(for userID: UUID) async throws -> [RevisionStatDTO] {
         
-        let revisionItemsCount = try await repository.revisionItemsCount(for: userID)
-        
         var stats = [RevisionStatDTO]()
         
-        if let revisionItemsCount {
-            stats.append(RevisionStatDTO(type: .totalRevisions, value: String(revisionItemsCount)))
-        }
+        let revisionItemsCount = try await repository.totalRevisionItemsCount(for: userID)
+        stats.append(RevisionStatDTO(type: .totalRevisions, value: String(revisionItemsCount)))
         
-        stats.append(RevisionStatDTO(type: .totalProblems, value: String(100)))
+        let dueRevisionItemsCount = try await repository.dueRevisionItemCount(for: userID)
+        stats.append(RevisionStatDTO(type: .dueRevisionItems, value: String(dueRevisionItemsCount)))
+        
+        let totalItemsCount = try await repository.totalRevisionItemsCount(for: userID)
+        stats.append(RevisionStatDTO(type: .totalItems, value: String(totalItemsCount)))
 
         return stats
     }
