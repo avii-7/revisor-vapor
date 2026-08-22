@@ -137,7 +137,7 @@ final class RevisionController: RouteCollection, Sendable {
         let userID = userAuthenticable.userId
         
         let itemDTO = try req.content.decode(RevisionItemPatchRequestDTO.self)
-        let updateItemDTO = try await service.update(item: itemDTO, userID: userID)
+        let updateItemDTO = try await service.update(request: itemDTO, userID: userID)
 
         let response = Response()
         try response.content.encode(updateItemDTO)
