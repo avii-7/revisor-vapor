@@ -42,7 +42,7 @@ final class RevisionController: RouteCollection, Sendable {
             return response
         }
         catch {
-            print(error)
+            req.logger.error("Failed to fetch due revision items error=\(error.localizedDescription)")
             return Response(status: .internalServerError)
         }
     }
@@ -54,15 +54,20 @@ final class RevisionController: RouteCollection, Sendable {
         let itemIdString = try req.parameters.require(ParameterConstants.id)
         
         guard let itemID = UUID(uuidString: itemIdString) else {
-            throw Abort(.badRequest)
+            req.logger.error("Item ID is not valid - \(itemIdString)")
+            throw Abort(.badRequest, reason: "Item ID is not valid")
         }
-        
-        let dto = try req.content.decode(RevisionItemSubmitRatingDTO.self)
 
-        try await service.review(itemID: itemID, rating: dto.rating, userID: userId)
-        
-        let response = Response()
-        return response
+        do {
+            let dto = try req.content.decode(RevisionItemSubmitRatingDTO.self)
+            try await service.review(itemID: itemID, rating: dto.rating, userID: userId)
+            req.logger.info("Review submission success - itemID=\(itemID) - rating=\(dto.rating)")
+            return Response()
+        }
+        catch {
+            req.logger.error("Review submission failed- \(error.localizedDescription)")
+            return Response(status: .internalServerError)
+        }
     }
     
     private func allItems(_ req: Request) async throws -> Response {
@@ -79,7 +84,7 @@ final class RevisionController: RouteCollection, Sendable {
             return response
         }
         catch {
-            print(error)
+            req.logger.error("Failed to fetch all revision items- \(error.localizedDescription)")
             return Response(status: .internalServerError)
         }
     }
@@ -96,7 +101,7 @@ final class RevisionController: RouteCollection, Sendable {
             return response
         }
         catch {
-            print(error)
+            req.logger.error("Failed to fetch preview items- \(error.localizedDescription)")
             return Response(status: .internalServerError)
         }
     }
@@ -105,12 +110,19 @@ final class RevisionController: RouteCollection, Sendable {
         let userAuthenticable = try req.auth.require(UserAuthenticatable.self)
         let userId = userAuthenticable.userId
         
-        let itemDTO = try req.content.decode(RevisionItemCreateRequestDTO.self)
-        let createdItem = try await service.create(itemDTO, userID: userId)
-        
-        let response = Response(status: .created)
-        try response.content.encode(createdItem)
-        return response
+        do {
+            let itemDTO = try req.content.decode(RevisionItemCreateRequestDTO.self)
+            let createdItem = try await service.create(itemDTO, userID: userId)
+            req.logger.info("Item created with id: \(createdItem.id)")
+            
+            let response = Response(status: .created)
+            try response.content.encode(createdItem)
+            return response
+        }
+        catch {
+            req.logger.error("Failed to create item- \(error.localizedDescription)")
+            return Response(status: .internalServerError)
+        }
     }
     
     private func item(_ req: Request) async throws -> Response {
@@ -120,11 +132,11 @@ final class RevisionController: RouteCollection, Sendable {
         let itemIdString = try req.parameters.require(ParameterConstants.id)
         
         guard let itemId = UUID(uuidString: itemIdString) else {
-            throw Abort(.badRequest)
+            throw Abort(.badRequest, reason: "Invalid item id")
         }
         
         guard let item = try await service.item(for: userId, itemID: itemId) else {
-            throw Abort(.notFound)
+            throw Abort(.notFound, reason: "Item not found")
         }
         
         let response = Response()
@@ -136,12 +148,19 @@ final class RevisionController: RouteCollection, Sendable {
         let userAuthenticable = try req.auth.require(UserAuthenticatable.self)
         let userID = userAuthenticable.userId
         
-        let itemDTO = try req.content.decode(RevisionItemPatchRequestDTO.self)
-        let updateItemDTO = try await service.update(request: itemDTO, userID: userID)
-
-        let response = Response()
-        try response.content.encode(updateItemDTO)
-        return response
+        do {
+            let itemDTO = try req.content.decode(RevisionItemPatchRequestDTO.self)
+            let updateItemDTO = try await service.update(request: itemDTO, userID: userID)
+            req.logger.info("Item updated: \(updateItemDTO.id.uuidString)")
+            
+            let response = Response()
+            try response.content.encode(updateItemDTO)
+            return response
+        }
+        catch {
+            req.logger.error("Falied to update an item: \(error.localizedDescription)")
+            return Response(status: .internalServerError)
+        }
     }
     
     private func deleteItem(_ req: Request) async throws -> Response {
@@ -151,12 +170,17 @@ final class RevisionController: RouteCollection, Sendable {
         let itemIdString = try req.parameters.require(ParameterConstants.id)
         
         guard let itemId = UUID(uuidString: itemIdString) else {
-            throw Abort(.badRequest)
+            throw Abort(.badRequest, reason: "Item id is not valid.")
         }
         
-        try await service.delete(itemID: itemId, userID: userId)
-        
-        let response = Response()
-        return response
+        do {
+            try await service.delete(itemID: itemId, userID: userId)
+            req.logger.info("Item with id: \(itemId) was deleted")
+            return Response()
+        }
+        catch {
+            req.logger.error("Falied to delete an item: \(error.localizedDescription)")
+            return Response(status: .internalServerError)
+        }
     }
 }
