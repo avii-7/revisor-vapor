@@ -16,6 +16,7 @@ func routes(_ app: Application) throws {
     
     let protectedGroup = group.grouped(UserAuthenticator())
         .grouped(UserAuthenticatable.guardMiddleware())
+        .grouped(DevelopmentDataMiddleware())
     
     try protectedGroup.register(collection: ProfileController(userRepository: userRepsitory))
 
