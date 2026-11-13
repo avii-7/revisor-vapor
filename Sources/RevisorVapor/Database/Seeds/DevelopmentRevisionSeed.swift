@@ -1,36 +1,38 @@
 import Fluent
-import SQLKit
 import Vapor
 
 struct DevelopmentRevisionSeed {
-    // Keep the marker even when samples are edited or deleted, so they stay deleted.
-    static let tagTitle = "Development samples"
 
-    func prepare(for userID: UUID, on database: any Database) async throws {
+    func prepare(for userID: UUID, on database: any Database) async throws -> Int {
+        
         try await database.transaction { db in
-            guard let sql = db as? any SQLDatabase else {
-                throw Abort(.internalServerError, reason: "Development seeding requires PostgreSQL")
+            guard try await User.find(userID, on: db) != nil else {
+                throw Abort(.notFound, reason: "User not found. Sign in before seeding.")
+            }
+            guard try await RevisionItem.query(on: db)
+                .filter(\.$userId == userID)
+                .first() == nil else { return 0 }
+
+            let predefinedTags = try await RevisionItemTag.query(on: db)
+                .filter(\.$isPredefined == true)
+                .sort(\.$title, .ascending)
+                .sort(\.$id, .ascending)
+                .all()
+            
+            let predefinedTagIDs = try predefinedTags.map { try $0.requireID() }
+            
+            guard !predefinedTagIDs.isEmpty else {
+                throw Abort(.internalServerError, reason: "Development seeding requires predefined tags")
             }
 
-            // Serialize first requests for the same user, including across server processes.
-            let user = try await sql.select().column("id").from(User.schema)
-                .where("id", .equal, userID).for(.update).first()
-            guard user != nil else { throw Abort(.unauthorized) }
-
-            let marker = try await RevisionItemTag.query(on: db)
-                .filter(\.$userId == userID)
-                .filter(\.$title == Self.tagTitle)
-                .first()
-            guard marker == nil else { return }
-
-            let tag = RevisionItemTag(userId: userID, title: Self.tagTitle)
-            try await tag.create(on: db)
-            let items = Self.items(for: userID, tagID: try tag.requireID())
+            let items = Self.items(for: userID, predefinedTagIDs: predefinedTagIDs)
             try await items.create(on: db)
+
+            return items.count
         }
     }
 
-    static func items(for userID: UUID, tagID: UUID, now: Date = .now) -> [RevisionItem] {
+    static func items(for userID: UUID, predefinedTagIDs: [UUID], now: Date = .now) -> [RevisionItem] {
         examples.enumerated().map { index, example in
             let state: RevisionCardState = [.new, .learning, .review, .relearning][index % 4]
             let isNew = state == .new
@@ -51,9 +53,18 @@ struct DevelopmentRevisionSeed {
                     state: state,
                     lastReview: isNew ? nil : now.addingTimeInterval(-2 * TimeConstants.secondsPerDay)
                 ),
-                tagIDs: [tagID]
+                tagIDs: Self.tagIDs(for: index, from: predefinedTagIDs)
             )
         }
+    }
+
+    private static func tagIDs(for index: Int, from predefinedTagIDs: [UUID]) -> [UUID] {
+        guard !predefinedTagIDs.isEmpty else { return [] }
+        let first = predefinedTagIDs[index % predefinedTagIDs.count]
+        if index.isMultiple(of: 2) || predefinedTagIDs.count == 1 {
+            return [first]
+        }
+        return [first, predefinedTagIDs[(index + 1) % predefinedTagIDs.count]]
     }
 
     private struct Example: Sendable {
