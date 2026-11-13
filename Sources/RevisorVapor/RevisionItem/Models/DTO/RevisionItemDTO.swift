@@ -8,11 +8,15 @@
 import Foundation
 import Vapor
 
-struct TagDTO: Content {
-    
-    let id: UUID
-    
-    let name: String
+struct RevisionItemsQueryDTO: Decodable {
+    let page: Int
+    let size: Int
+    let tagIDs: [UUID]?
+
+    enum CodingKeys: String, CodingKey {
+        case page, size
+        case tagIDs = "tag_ids"
+    }
 }
 
 struct FolderDTO: Content {
@@ -45,9 +49,14 @@ struct PreviewRevisionItemResponseDTO: Content {
     
     let lastReview: Date?
     
-    let tags: [TagDTO]?
+    let tagIDs: [UUID]?
     
     let folder: FolderDTO?
+
+    enum CodingKeys: String, CodingKey {
+        case id, title, subtitle, revisionCount, lastReview, folder
+        case tagIDs = "tag_ids"
+    }
 }
 
 struct RevisionItemResponseDTO: Content {
@@ -72,9 +81,15 @@ struct RevisionItemResponseDTO: Content {
     
     let lastReview: Date?
     
-    let tags: [TagDTO]?
+    let tagIDs: [UUID]?
     
     let folder: FolderDTO?
+
+    enum CodingKeys: String, CodingKey {
+        case id, title, content, platformUrl, keyIntuition, solutionCode
+        case nextRevision, due, revisionCount, lastReview, folder
+        case tagIDs = "tag_ids"
+    }
 }
 
 struct RevisionItemCreateRequestDTO: Content {
@@ -103,6 +118,13 @@ struct RevisionItemPatchRequestDTO: Decodable {
     let keyIntuition: String?
     
     let solutionCode: String?
+    
+    enum CodingKeys: String, CodingKey {
+        case id, title, content
+        case platformUrl = "platform_url"
+        case keyIntuition = "key_intuition"
+        case solutionCode = "solution_code"
+    }
 }
 
 struct RevisionItemSubmitRatingDTO: Content {

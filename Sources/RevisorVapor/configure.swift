@@ -31,6 +31,8 @@ public func configure(_ app: Application) async throws {
     app.migrations.add(MigrationV1())
     app.migrations.add(CategoryTagsSeed())
 
+    app.asyncCommands.use(SeedRevisionsCommand(), as: "seed-revisions")
+
     let feURI = Environment.get(.frontendURI)!
     
     let corsConfiguration = CORSMiddleware.Configuration(

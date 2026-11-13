@@ -20,6 +20,8 @@ func routes(_ app: Application) throws {
     try protectedGroup.register(collection: ProfileController(userRepository: userRepsitory))
 
     try protectedGroup.register(collection: RevisionController(service: service))
+
+    try protectedGroup.register(collection: TagsController(repository: TagPostgresRepository(db: app.db)))
     
     try protectedGroup.register(
         collection: DashboardController(

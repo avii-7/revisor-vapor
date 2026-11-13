@@ -18,13 +18,15 @@ protocol RevisionRepository: Sendable {
     
     func dueRevisionItemCount(for userID: UUID) async throws -> Int
     
-    func revisionItemsCount(for userID: UUID) async throws -> Int?
+    func totalRevisionItemsCount(for userID: UUID) async throws -> Int
+    
+    func totalRevisionsCount(for userID: UUID) async throws -> Int?
     
     func dueRevisionItems(for userID: UUID) async throws -> [RevisionItem]
     
     func previewRevisionItems(for userID: UUID) async throws -> [RevisionItem]
     
-    func revisionItems(for userID: UUID, request: PageRequest) async throws -> Page<RevisionItem>
+    func revisionItems(for userID: UUID, request: PageRequest, tagIDs: [UUID]?) async throws -> Page<RevisionItem>
     
     func get(itemID: UUID, for userId: UUID) async throws -> RevisionItem?
     
@@ -80,7 +82,7 @@ struct RevisionPostgresRepository: RevisionRepository {
         return count
     }
     
-    func revisionItemsCount(for userID: UUID) async throws -> Int? {
+    func totalRevisionsCount(for userID: UUID) async throws -> Int? {
         let count = try await query(for: userID)
             .sum(\.$memoryState.$reps)
         
@@ -96,6 +98,13 @@ struct RevisionPostgresRepository: RevisionRepository {
         return items
     }
     
+    func totalRevisionItemsCount(for userID: UUID) async throws -> Int {
+        let items = try await query(for: userID)
+            .count()
+
+        return items
+    }
+    
     func previewRevisionItems(for userID: UUID) async throws -> [RevisionItem] {
         let items = try await query(for: userID)
             .sort(\.$updatedAt, .descending)
@@ -105,12 +114,17 @@ struct RevisionPostgresRepository: RevisionRepository {
         return items
     }
     
-    func revisionItems(for userID: UUID, request: PageRequest) async throws -> Page<RevisionItem> {
-        let result = try await query(for: userID)
+    func revisionItems(for userID: UUID, request: PageRequest, tagIDs: [UUID]?) async throws -> Page<RevisionItem> {
+        let query = query(for: userID)
+
+        if let tagIDs, !tagIDs.isEmpty {
+            query.filter(\.$tagIDs, .custom("&&"), tagIDs)
+        }
+
+        return try await query
             .sort(\.$updatedAt, .descending)
+            .sort(\.$id, .ascending)
             .paginate(request)
-            
-        return result
     }
     
     func get(itemID: UUID, for userId: UUID) async throws -> RevisionItem? {

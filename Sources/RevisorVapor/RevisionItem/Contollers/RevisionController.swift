@@ -70,10 +70,11 @@ final class RevisionController: RouteCollection, Sendable {
         let userAuthenticable = try req.auth.require(UserAuthenticatable.self)
         let userId = userAuthenticable.userId
         
-        let pageDTO = try req.query.decode(PageRequestDTO.self)
+        let query = try req.query.decode(RevisionItemsQueryDTO.self)
+        let pageDTO = PageRequestDTO(page: query.page, size: query.size)
         
         do {
-            let paginated = try await service.revisionItems(for: userId, paginationRequest: pageDTO)
+            let paginated = try await service.revisionItems(for: userId, paginationRequest: pageDTO, tagIds: query.tagIDs)
             let response = Response()
             try response.content.encode(paginated)
             return response
@@ -137,7 +138,7 @@ final class RevisionController: RouteCollection, Sendable {
         let userID = userAuthenticable.userId
         
         let itemDTO = try req.content.decode(RevisionItemPatchRequestDTO.self)
-        let updateItemDTO = try await service.update(item: itemDTO, userID: userID)
+        let updateItemDTO = try await service.update(request: itemDTO, userID: userID)
 
         let response = Response()
         try response.content.encode(updateItemDTO)
