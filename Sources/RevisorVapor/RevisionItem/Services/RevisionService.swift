@@ -116,10 +116,10 @@ final class RevisionService: Sendable {
         }
     }
     
-    func revisionItems(for userId: UUID, paginationRequest: PageRequestDTO) async throws -> PaginatedDTO<PreviewRevisionItemResponseDTO> {
+    func revisionItems(for userId: UUID, paginationRequest: PageRequestDTO, tagIds: [UUID]?) async throws -> PaginatedDTO<PreviewRevisionItemResponseDTO> {
         do {
             let request = PageRequest(page: paginationRequest.page, per: paginationRequest.size)
-            let dbModel = try await repository.revisionItems(for: userId, request: request)
+            let dbModel = try await repository.revisionItems(for: userId, request: request, tagIDs: tagIds)
             return RevisionMapper.map(dbModel)
         }
         catch {

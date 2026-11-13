@@ -8,6 +8,17 @@
 import Foundation
 import Vapor
 
+struct RevisionItemsQueryDTO: Decodable {
+    let page: Int
+    let size: Int
+    let tagIDs: [UUID]?
+
+    enum CodingKeys: String, CodingKey {
+        case page, size
+        case tagIDs = "tag_ids"
+    }
+}
+
 struct FolderDTO: Content {
     
     let id: UUID
