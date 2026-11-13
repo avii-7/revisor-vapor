@@ -8,9 +8,7 @@
 import Foundation
 import FluentKit
 
-struct RevisionMapper {
-    
-    private init() { }
+enum RevisionMapper {
 
     static func map(_ item: RevisionItem, nextRevision: NextRevision?) -> RevisionItemResponseDTO {
         RevisionItemResponseDTO(
@@ -24,7 +22,7 @@ struct RevisionMapper {
             due: item.memoryState.due,
             revisionCount: item.memoryState.reps,
             lastReview: item.memoryState.lastReview,
-            tags: item.tagIDs?.map { TagDTO(id: $0, name: "Dummy") },
+            tagIDs: item.tagIDs,
             folder: nil
         )
     }
@@ -36,7 +34,7 @@ struct RevisionMapper {
             subtitle: nil,
             revisionCount: item.memoryState.reps,
             lastReview: item.memoryState.lastReview,
-            tags: item.tagIDs?.map { TagDTO(id: $0, name: "Dummy") },
+            tagIDs: item.tagIDs,
             folder: nil
         )
     }

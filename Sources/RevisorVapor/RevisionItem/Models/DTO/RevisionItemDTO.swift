@@ -8,13 +8,6 @@
 import Foundation
 import Vapor
 
-struct TagDTO: Content {
-    
-    let id: UUID
-    
-    let name: String
-}
-
 struct FolderDTO: Content {
     
     let id: UUID
@@ -45,9 +38,14 @@ struct PreviewRevisionItemResponseDTO: Content {
     
     let lastReview: Date?
     
-    let tags: [TagDTO]?
+    let tagIDs: [UUID]?
     
     let folder: FolderDTO?
+
+    enum CodingKeys: String, CodingKey {
+        case id, title, subtitle, revisionCount, lastReview, folder
+        case tagIDs = "tag_ids"
+    }
 }
 
 struct RevisionItemResponseDTO: Content {
@@ -72,9 +70,15 @@ struct RevisionItemResponseDTO: Content {
     
     let lastReview: Date?
     
-    let tags: [TagDTO]?
+    let tagIDs: [UUID]?
     
     let folder: FolderDTO?
+
+    enum CodingKeys: String, CodingKey {
+        case id, title, content, platformUrl, keyIntuition, solutionCode
+        case nextRevision, due, revisionCount, lastReview, folder
+        case tagIDs = "tag_ids"
+    }
 }
 
 struct RevisionItemCreateRequestDTO: Content {
